@@ -1,0 +1,14 @@
+// The Bot name and Owner number Number comes here 
+// Base Bot by OmegaTech
+// Contact: https://wa.me/23279729810 (OmegaTech)
+
+{
+  "config": {
+    "name": "BaseBot",
+    "ownerJid": [
+      "23279729810@s.whatsapp.net",
+      "23279729810@s.whatsapp.net"
+    ],
+    "ownerLid": [""]
+  }
+}
