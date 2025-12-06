@@ -184,7 +184,7 @@ class DefenderManager:
             
             # Try registry
             key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                self.defender_reg_path + r\Signature Updates')
+                                self.defender_reg_path + r'\Signature Updates')
             
             version = winreg.QueryValueEx(key, 'AVSignatureVersion')[0]
             
@@ -285,7 +285,7 @@ class DefenderManager:
             results.append("Real-time protection disabled via registry")
             
             # Disable SpyNet reporting
-            key_path = self.defender_reg_path + r\SpyNet'
+            key_path = self.defender_reg_path + r'\SpyNet'
             key = winreg.CreateKey(winreg.HKEY_LOCAL_MACHINE, key_path)
             
             winreg.SetValueEx(key, 'SpyNetReporting', 0, winreg.REG_DWORD, 0)  # 0 = disabled
