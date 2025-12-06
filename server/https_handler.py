@@ -3,6 +3,7 @@
 AETHER HTTPS Handler with Domain Fronting
 Seamless integration with existing session management.
 """
+import os
 import ssl
 import socket
 import threading
