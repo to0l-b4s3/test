@@ -39,7 +39,10 @@ if (cluster.isPrimary) {
 } else {
   const workerLog = createLogger(`Worker-${process.pid}`);
 
-  import(join(__dirname, "main.js"))
+  // Convert file path to URL for proper ESM import
+  const mainPath = new URL(`./main.js`, import.meta.url);
+  
+  import(mainPath.href)
     .then(({ startSocket }) => startSocket())
     .then(() => workerLog.success("Socket started successfully"))
     .catch((err) => {

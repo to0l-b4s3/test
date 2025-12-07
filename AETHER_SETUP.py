@@ -28,6 +28,7 @@ class AetherSetup:
         self.config = self.load_config()
         self.is_windows = platform.system() == 'Windows'
         self.is_linux = platform.system() == 'Linux'
+        self.python_exe = None  # Will be set by get_python_executable()
         
     def print_header(self, title):
         """Print styled header"""
@@ -85,6 +86,34 @@ class AetherSetup:
         except Exception as e:
             self.print_error(f"Command failed: {e}")
             return 1, '', str(e)
+    
+    def get_python_executable(self):
+        """Detect Python executable path"""
+        # Try different Python command names
+        python_commands = ['python', 'python3', 'python3.11', 'python3.10', 'python3.9']
+        
+        for cmd in python_commands:
+            try:
+                result = subprocess.run(
+                    f"{cmd} --version",
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=2
+                )
+                if result.returncode == 0:
+                    self.print_success(f"Found Python: {cmd} ({result.stdout.strip()})")
+                    return cmd
+            except Exception:
+                continue
+        
+        # If we're running this script, sys.executable should work
+        if sys.executable:
+            self.print_success(f"Using current Python: {sys.executable}")
+            return sys.executable
+        
+        self.print_error("Python not found in PATH")
+        return None
     
     def prompt_input(self, prompt, default=None, validate=None):
         """Get user input with optional validation"""
@@ -622,12 +651,21 @@ class AetherSetup:
         """Install Python dependencies"""
         print(f"\n{Fore.BLUE}Installing Python dependencies...{Style.RESET_ALL}")
         
+        # Detect Python if not already done
+        if not self.python_exe:
+            self.python_exe = self.get_python_executable()
+        
+        if not self.python_exe:
+            self.print_error("Cannot install: Python not found")
+            return
+        
         req_file = self.root_dir / 'requirements.txt'
         if not req_file.exists():
             self.print_error(f"requirements.txt not found at {req_file}")
             return
         
-        cmd = f"pip install -r {req_file}"
+        # Use python -m pip for better compatibility
+        cmd = f"{self.python_exe} -m pip install -r {req_file}"
         code, stdout, stderr = self.run_command(cmd)
         
         if code == 0:
@@ -690,7 +728,15 @@ class AetherSetup:
         print(f"\n{Fore.BLUE}Starting AETHER C2 Server...{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}Press Ctrl+C to stop{Style.RESET_ALL}\n")
         
-        cmd = f"cd {self.root_dir} && python3 server/aether_server.py"
+        # Detect Python if not already done
+        if not self.python_exe:
+            self.python_exe = self.get_python_executable()
+        
+        if not self.python_exe:
+            self.print_error("Cannot start server: Python not found")
+            return
+        
+        cmd = f"cd {self.root_dir} && {self.python_exe} server/aether_server.py"
         self.run_command(cmd, shell=True, capture=False)
     
     def run_bot(self):
@@ -707,7 +753,15 @@ class AetherSetup:
         """Build agent executable"""
         print(f"\n{Fore.BLUE}Building AETHER Agent...{Style.RESET_ALL}\n")
         
-        cmd = f"cd {self.root_dir} && python3 builder/compile.py"
+        # Detect Python if not already done
+        if not self.python_exe:
+            self.python_exe = self.get_python_executable()
+        
+        if not self.python_exe:
+            self.print_error("Cannot build agent: Python not found")
+            return
+        
+        cmd = f"cd {self.root_dir} && {self.python_exe} builder/compile.py"
         code, stdout, stderr = self.run_command(cmd, capture=True)
         
         if code == 0:
@@ -720,7 +774,15 @@ class AetherSetup:
         """Run integration tests"""
         print(f"\n{Fore.BLUE}Running Integration Tests...{Style.RESET_ALL}\n")
         
-        cmd = f"cd {self.root_dir} && python3 test_files.py"
+        # Detect Python if not already done
+        if not self.python_exe:
+            self.python_exe = self.get_python_executable()
+        
+        if not self.python_exe:
+            self.print_error("Cannot run tests: Python not found")
+            return
+        
+        cmd = f"cd {self.root_dir} && {self.python_exe} test_integration.py"
         code, stdout, stderr = self.run_command(cmd, capture=True)
         
         print(stdout)
@@ -736,11 +798,19 @@ class AetherSetup:
         """Run all components interactively"""
         self.print_section("Running All Components")
         
+        # Detect Python if not already done
+        if not self.python_exe:
+            self.python_exe = self.get_python_executable()
+        
+        if not self.python_exe:
+            self.print_error("Cannot proceed: Python not found")
+            return
+        
         print(f"\n{Fore.CYAN}This will start the C2 server and bot in parallel{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}You'll need multiple terminal windows for this{Style.RESET_ALL}\n")
         
         print("💡 Instructions:")
-        print("1. Server: python3 server/aether_server.py")
+        print(f"1. Server: {self.python_exe} server/aether_server.py")
         print("2. Bot: cd WA-BOT-Base && npm start")
         print("3. Enable WhatsApp in server: AETHER> whatsapp enable")
         print("4. Connect via WhatsApp: Send 'auth <password>'")
