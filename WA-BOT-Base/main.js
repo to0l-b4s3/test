@@ -122,6 +122,7 @@ export const startSocket = async () => {
   let reconnectAttempts = 0;
   const maxReconnectAttempts = 10;
   const baseReconnectDelay = 3000;
+  let authMethod = null; // Track which auth method is being used
 
   try {
     const sessionPath = "./data/sessions";
@@ -130,7 +131,35 @@ export const startSocket = async () => {
     const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
     const { version, isLatest } = await fetchLatestBaileysVersion();
 
-    log.info(`Using WA v${version.join(".")}, latest: ${isLatest}`);
+    log.info(`\n📱 Using WhatsApp v${version.join(".")}, Latest: ${isLatest ? "✅ Yes" : "❌ No"}`);
+
+    // Check if session exists
+    const sessionExists = state.creds && state.creds.noiseKey;
+    if (sessionExists) {
+      log.success("✅ Existing session found. Connecting...\n");
+    } else {
+      log.warn("❌ No existing session found.");
+      log.info("\n🔐 Choose your authentication method:\n");
+      log.info("  1️⃣  QR Code Scan (Recommended)");
+      log.info("       - Faster connection");
+      log.info("       - Phone becomes linked device");
+      log.info("       - Most stable method\n");
+      log.info("  2️⃣  Pairing Code");
+      log.info("       - Phone number required");
+      log.info("       - WhatsApp Web style");
+      log.info("       - Longer connection time\n");
+      
+      let validChoice = false;
+      while (!validChoice) {
+        const choice = await question("👉 Enter your choice (1 or 2): ");
+        if (choice.trim() === "1" || choice.trim() === "2") {
+          authMethod = choice.trim() === "2" ? "pairing" : "qr";
+          validChoice = true;
+        } else {
+          log.warn("⚠️  Invalid input. Please enter 1 or 2.");
+        }
+      }
+    }
 
     const sock = makeWASocket({
       version,
@@ -151,39 +180,62 @@ export const startSocket = async () => {
       printQRInTerminal: false,
     });
 
-    if (!sock.authState.creds.registered) {
-      log.info("\n========== Authentication Method ==========");
-      log.info("[1] Scan QR Code (Recommended - Phone Linked)");
-      log.info("[2] Pairing Code (Alternative - Web Linked)");
-      log.info("===========================================\n");
+    if (!sock.authState.creds.registered && authMethod === "pairing") {
+      log.info("\n📞 Pairing Code Authentication\n");
+      log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
       
-      const choice = await question("Select authentication method (1 or 2): ");
+      let validPhone = false;
+      let phoneNumber = "";
       
-      if (choice.trim() === "2") {
-        // Pairing code method
-        let phoneNumber = await question("Enter your phone number (with country code, e.g., +27694176088):\n");
+      while (!validPhone) {
+        phoneNumber = await question("📱 Enter your phone number (with country code, e.g., +27694176088):\n> ");
         phoneNumber = phoneNumber.replace(/\s+/g, '').replace(/[^\d+]/g, '');
         
         if (!phoneNumber.startsWith('+')) {
           phoneNumber = '+' + phoneNumber;
         }
         
-        try {
-          log.info("Requesting pairing code...");
-          const code = await sock.requestPairingCode(phoneNumber);
-          log.success(`\n✅ Your Pairing Code: ${code}`);
-          log.info("Enter this code in your WhatsApp app:");
-          log.info("  Settings > Linked Devices > Link a Device > Link Phone as Companion");
-          log.info("\nWaiting for authentication...\n");
-        } catch (error) {
-          log.error("Failed to request pairing code:", error.message);
-          throw error;
+        if (/^\+\d{10,15}$/.test(phoneNumber)) {
+          validPhone = true;
+          log.success(`✅ Phone number accepted: ${phoneNumber}\n`);
+        } else {
+          log.warn("⚠️  Invalid phone number. Include country code (e.g., +27).\n");
         }
-      } else {
-        // QR code method (default)
-        log.info("QR Code will appear below. Scan it with your WhatsApp app:");
-        log.info("  Settings > Linked Devices > Link a Device\n");
       }
+      
+      try {
+        log.info("⏳ Requesting pairing code from WhatsApp servers...\n");
+        const code = await sock.requestPairingCode(phoneNumber);
+        
+        log.success("\n╔════════════════════════════════════════════════════════════════╗");
+        log.success(`║  🔐 YOUR PAIRING CODE: ${code}                                  ║`);
+        log.success("╚════════════════════════════════════════════════════════════════╝\n");
+        
+        log.info("📖 Instructions:");
+        log.info("  1. Open WhatsApp on your phone");
+        log.info("  2. Go to: Settings → Linked Devices → Link a Device");
+        log.info("  3. Enter this code when prompted");
+        log.info("  4. Your phone will be linked in seconds\n");
+        
+        log.info("⏳ Waiting for authentication (this may take 30-60 seconds)...\n");
+      } catch (error) {
+        log.error("❌ Failed to request pairing code:", error.message);
+        log.error("Possible reasons:");
+        log.error("  - Network connection issue");
+        log.error("  - Invalid phone number");
+        log.error("  - WhatsApp server error");
+        throw error;
+      }
+    } else if (!sock.authState.creds.registered && authMethod === "qr") {
+      log.info("\n📲 QR Code Authentication\n");
+      log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+      log.info("⏳ Generating QR code...\n");
+      log.info("Instructions:");
+      log.info("  1. A QR code will appear below");
+      log.info("  2. Open WhatsApp on your phone");
+      log.info("  3. Tap Menu (⋮) → Linked Devices → Link a Device");
+      log.info("  4. Scan the QR code with your phone camera\n");
+      log.info("Waiting for QR code...\n");
     }
 
     sock.ev.on("creds.update", saveCreds);
@@ -194,47 +246,63 @@ export const startSocket = async () => {
 
       if (qr) {
         try {
+          log.info("\n🎯 Generating QR Code (expires in 60 seconds)...\n");
           qrcode.generate(qr, { small: true });
-          log.info("Scan the QR code above with your WhatsApp app");
+          log.info("\n📱 Scan the QR code above with WhatsApp camera\n");
         } catch (error) {
-          log.warn("QR code generation failed:", error.message);
-          log.info("QR Code data:", qr);
+          log.warn("⚠️  QR code generation failed:", error.message);
+          log.info("QR Code raw data:", qr);
         }
       }
 
-      if (connection === "close") {
+      if (connection === "connecting") {
+        log.info("🔗 Connecting to WhatsApp servers...");
+      } else if (connection === "open") {
+        log.success("\n✅ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        log.success("✅ Successfully connected to WhatsApp!");
+        log.success("✅ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+        reconnectAttempts = 0;
+        
+        // Get bot info
+        const jid = sock.user?.id;
+        const name = sock.user?.name || 'Bot';
+        log.success(`🤖 Bot Name: ${name}`);
+        log.success(`📞 Bot JID: ${jid}\n`);
+        
+        await sendTestWAM(sock);
+      } else if (connection === "close") {
         const shouldReconnect = 
           lastDisconnect?.error instanceof Boom &&
           lastDisconnect.error.output?.statusCode !== DisconnectReason.loggedOut;
 
-        log.error(
-          `Connection closed due to ${lastDisconnect?.error}, reconnecting: ${shouldReconnect}`
-        );
+        const disconnectCode = lastDisconnect?.error?.output?.statusCode;
+        const disconnectMessage = DisconnectReason[disconnectCode] || "Unknown error";
+
+        log.error(`\n❌ Connection closed (${disconnectCode}: ${disconnectMessage})`);
+
+        if (disconnectCode === DisconnectReason.loggedOut) {
+          log.warn("⚠️  You have been logged out. Delete ./data/sessions and restart.\n");
+          process.exit(0);
+        }
 
         if (shouldReconnect && reconnectAttempts < maxReconnectAttempts) {
           const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts), 60000);
           reconnectAttempts++;
+          const seconds = (delay / 1000).toFixed(0);
           
-          log.info(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+          log.info(`🔄 Reconnecting in ${seconds}s (attempt ${reconnectAttempts}/${maxReconnectAttempts})...\n`);
           
           setTimeout(() => {
             startSocket();
           }, delay);
         } else if (reconnectAttempts >= maxReconnectAttempts) {
-          log.error("Maximum reconnection attempts reached. Exiting...");
+          log.error("❌ Maximum reconnection attempts reached (10/10). Exiting...");
           process.exit(1);
         } else {
-          log.warn("Connection closed. You are logged out.");
+          log.warn("⚠️  You have been logged out. Clearing session...");
           rl.close();
           process.exit(0);
         }
-      } else if (connection === "open") {
-        log.success("Connected successfully!");
-        reconnectAttempts = 0;
-        
-        await sendTestWAM(sock);
-      } else if (connection === "connecting") {
-        log.info("Connecting to WhatsApp...");
       }
     });
 
