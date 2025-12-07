@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AETHER C2 Server
-Universal Class Control Interface
+Universal Class Control Interface - Modern Edition
 """
 import socket, threading, json, os, sys, time, base64, hashlib, random, queue
 from datetime import datetime
@@ -17,6 +17,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from crypto import CryptoHandler
 from sessions import SessionManager
 from commands.command_suite import AetherCommandSuite
+from modern_style import ModernStyle, TerminalPrinter
+from command_help import get_command_help, COMMAND_HELP
+from whatsapp_formatter import WhatsAppFormatter
 
 # Import WhatsApp integration (optional)
 try:
@@ -45,14 +48,8 @@ class AetherServer:
         if WHATSAPP_AVAILABLE:
             self.whatsapp = WhatsAppIntegration(WHATSAPP_CONFIG)
         
-        # Server banner
-        self.banner = f"""{Fore.CYAN}
-    ╔═╗╔═╗╔╦╗╔═╗╦  ╔═╗╦═╗
-    ║ ╦╠═╝ ║ ╠═╝║  ║╣ ╠╦╝
-    ╚═╝╩   ╩ ╩  ╩═╝╚═╝╩╚═
-    Universal Class Control v1.0
-    {Fore.YELLOW}Listener: {host}:{port}
-    {Style.RESET_ALL}"""
+        # Server banner - Modern
+        self.banner = ModernStyle.banner()
         
         # Command registry
         self.commands = {
@@ -279,13 +276,13 @@ class AetherServer:
 
     # ========== COMMAND LINE INTERFACE ==========
     def cmd_loop(self):
-        """Main command loop."""
+        """Main command loop - MODERNIZED."""
         while self.running:
             try:
                 if self.current_session:
-                    prompt = f"{Fore.RED}AETHER{Style.RESET_ALL}({Fore.GREEN}{self.current_session}{Style.RESET_ALL})> "
+                    prompt = f"{ModernStyle.Colors.BRIGHT_RED}AETHER{ModernStyle.Colors.RESET}({ModernStyle.Colors.BRIGHT_GREEN}{self.current_session}{ModernStyle.Colors.RESET})> "
                 else:
-                    prompt = f"{Fore.RED}AETHER{Style.RESET_ALL}> "
+                    prompt = f"{ModernStyle.Colors.BRIGHT_RED}AETHER{ModernStyle.Colors.RESET}> "
                 
                 cmd = input(prompt).strip()
                 if not cmd:
@@ -301,73 +298,128 @@ class AetherServer:
                 elif cmd_name in self.commands:
                     self.commands[cmd_name](args)
                 else:
-                    print(f"{Fore.RED}[-] Unknown command. Type 'help'.")
+                    print(ModernStyle.error("Unknown Command", f"'{cmd_name}' is not recognized. Type 'help' for available commands."))
                     
             except KeyboardInterrupt:
-                print("\n[*] Use 'exit' to quit")
+                print(f"\n{ModernStyle.info('Tip', "Type 'exit' to quit the server")}")
             except Exception as e:
-                print(f"{Fore.RED}[-] Error: {e}")
+                print(ModernStyle.error("Error", str(e)))
 
     def cmd_help(self, args):
-        """Show help menu and available commands."""
-        if self.current_session:
-            # Show session commands from suite
-            help_result = self.command_suite.execute(self.current_session, 'help')
-            if 'data' in help_result:
-                print(f"{Fore.CYAN}=== Session Commands ===")
-                print(help_result['data'])
-                print(f"\n{Fore.YELLOW}Type 'back' to return to main menu.")
+        """Show help menu and available commands - MODERNIZED."""
+        if args and len(args) > 0:
+            # Show specific command help
+            cmd_name = args[0].lower()
+            cmd_info = get_command_help(cmd_name)
+            if cmd_info:
+                print(ModernStyle.header(f"Help: {cmd_name}", "📖"))
+                print(f"{ModernStyle.Symbols.FILE} Description:\n  {cmd_info['description']}\n")
+                print(f"{ModernStyle.Symbols.COMMAND} Usage:\n  {cmd_info['usage']}\n")
+                print(f"{ModernStyle.Symbols.GEAR} Options:\n  {cmd_info['options']}\n")
+                print(f"{ModernStyle.Symbols.ARROW} Example:\n  {cmd_info['example']}\n")
+                print(f"{ModernStyle.Symbols.CHART} Output:\n  {cmd_info['output']}\n")
+                if 'output_location' in cmd_info:
+                    print(f"{ModernStyle.Symbols.FOLDER} Output Location:\n  {cmd_info['output_location']}\n")
+                print(f"{ModernStyle.Symbols.FIRE} Category: {cmd_info['category']}\n")
             else:
-                print(f"{Fore.CYAN}=== Session Commands ===")
-                commands_list = list(self.command_suite.command_map.keys())
-                for i in range(0, len(commands_list), 4):
-                    print(f"  {' '.join(f'{cmd:<15}' for cmd in commands_list[i:i+4])}")
+                print(ModernStyle.error("Command not found", f"'{cmd_name}' is not a recognized command"))
+        elif self.current_session:
+            # Show session commands with modern styling
+            print(ModernStyle.header("Agent Commands", "💻"))
+            
+            # Group by category
+            categories = {}
+            for cmd, info in COMMAND_HELP.items():
+                cat = info.get('category', 'Other')
+                if cat not in categories:
+                    categories[cat] = []
+                categories[cat].append(cmd)
+            
+            for category in sorted(categories.keys()):
+                commands = categories[category]
+                print(f"\n{ModernStyle.Colors.BRIGHT_CYAN}{category}{ModernStyle.Colors.RESET}")
+                print(f"  {' '.join(f'{cmd:<15}' for cmd in commands)}")
+            
+            print(f"\n{ModernStyle.info('Tip', f'Type {ModernStyle.Colors.BOLD}help <command>{ModernStyle.Colors.RESET} for detailed help')}")
+            print(f"{ModernStyle.info('Exit', f'Type {ModernStyle.Colors.BOLD}back{ModernStyle.Colors.RESET} to return to main menu')}\n")
         else:
-            # Show global commands with descriptions
-            print(f"{Fore.CYAN}=== Global Commands ===")
+            # Show global commands with modern styling
+            print(ModernStyle.header("AETHER Global Commands", "🌐"))
+            
             global_commands = {
-                'help': 'Show this help menu',
+                'help [command]': 'Show help (optionally for specific command)',
                 'sessions': 'List all active agent sessions',
-                'interact': 'Interact with a specific session (usage: interact <session_id>)',
-                'broadcast': 'Send command to all sessions (usage: broadcast <command>)',
-                'generate': 'Generate new agent payload (usage: generate <output_file> [config])',
-                'kill': 'Kill/terminate a session (usage: kill <session_id>)',
-                'info': 'Display system and server information',
-                'config': 'Show or update server configuration',
-                'scan': 'Scan network for targets or vulnerabilities',
-                'exit': 'Exit the C2 server',
+                'interact <id>': 'Interact with a specific agent session',
+                'broadcast <cmd>': 'Send command to all connected agents',
+                'generate': 'Generate new agent payload',
+                'kill <id>': 'Terminate a session',
+                'info': 'Display server information',
+                'config': 'Show server configuration',
+                'scan': 'Scan for targets/vulnerabilities',
+                'whatsapp': 'WhatsApp integration control',
+                'exit': 'Shutdown server',
             }
+            
+            print(f"\n{ModernStyle.Colors.BOLD}{ModernStyle.Colors.CYAN}Quick Start:{ModernStyle.Colors.RESET}")
+            TerminalPrinter.print_item(ModernStyle.Symbols.ROCKET, "List agents", "sessions")
+            TerminalPrinter.print_item(ModernStyle.Symbols.COMMAND, "Connect", "interact <agent_id>")
+            TerminalPrinter.print_item(ModernStyle.Symbols.FIRE, "Build agent", "generate")
+            TerminalPrinter.print_item(ModernStyle.Symbols.INFO, "Help", "help <command>")
+            
+            print(f"\n{ModernStyle.Colors.BOLD}{ModernStyle.Colors.CYAN}Available Commands:{ModernStyle.Colors.RESET}\n")
             for cmd, desc in sorted(global_commands.items()):
-                print(f"  {cmd:<20} - {desc}")
-            print(f"\n{Fore.YELLOW}Tip: Type 'sessions' to list, 'interact <id>' to control.")
+                print(f"  {ModernStyle.Colors.BRIGHT_GREEN}{cmd:<25}{ModernStyle.Colors.RESET} → {desc}")
+            
+            print(f"\n{ModernStyle.Symbols.STAR} Example: {ModernStyle.Colors.BOLD}help screenshot{ModernStyle.Colors.RESET} for detailed command info\n")
 
     def cmd_sessions(self, args):
-        """List all active sessions."""
+        """List all active sessions - MODERNIZED."""
         sessions = self.sessions.list_all()
         if not sessions:
-            print(f"{Fore.YELLOW}[*] No active sessions")
+            print(ModernStyle.warning("No Sessions", "No active agent sessions at the moment"))
             return
         
-        print(f"{Fore.CYAN}=== Active Sessions ({len(sessions)}) ===")
-        print(f"{'ID':<10} {'Address':<20} {'Hostname':<15} {'User':<15} {'OS':<10} {'Privilege':<10} {'Last Seen':<10}")
-        print("-" * 95)
+        # Create modern table
+        print(ModernStyle.header(f"Active Sessions ({len(sessions)})", "📊"))
+        
+        # Prepare table data
+        headers = ['ID', 'Address', 'Hostname', 'User', 'OS', 'Privilege', 'Last Seen']
+        rows = []
+        
         for sid, info in sessions.items():
             last_seen = datetime.fromisoformat(info['last_seen']).strftime('%H:%M:%S')
-            print(f"{Fore.GREEN}{sid:<10}{Style.RESET_ALL} {info['address']:<20} {info['hostname']:<15} {info['user']:<15} {info['os']:<10} {info['privilege']:<10} {last_seen:<10}")
+            privilege_icon = ModernStyle.Symbols.FIRE if info['privilege'] == 'admin' else ModernStyle.Symbols.USER
+            rows.append([
+                f"{ModernStyle.Colors.BRIGHT_GREEN}{sid}{ModernStyle.Colors.RESET}",
+                info['address'],
+                info['hostname'],
+                info['user'],
+                info['os'],
+                f"{privilege_icon} {info['privilege']}",
+                f"{ModernStyle.Colors.DIM}{last_seen}{ModernStyle.Colors.RESET}"
+            ])
+        
+        # Print modern table
+        print(ModernStyle.table(headers, rows))
+        print(f"\n{ModernStyle.info('Tip', f'Use {ModernStyle.Colors.BOLD}interact <session_id>{ModernStyle.Colors.RESET} to control an agent')}\n")
 
     def cmd_interact(self, args):
-        """Interact with a session. Usage: interact <session_id>"""
+        """Interact with a session. Usage: interact <session_id> - MODERNIZED"""
         if not args:
-            print(f"{Fore.RED}[-] Usage: interact <session_id>")
+            print(ModernStyle.error("Invalid Usage", "Usage: interact <session_id>"))
             return
         
         session_id = args[0]
         if not self.sessions.exists(session_id):
-            print(f"{Fore.RED}[-] Session {session_id} not found")
+            print(ModernStyle.error("Session Not Found", f"Session '{session_id}' does not exist"))
+            print(f"\n{ModernStyle.info('Tip', 'Use \'sessions\' command to see available sessions')}\n")
             return
         
         self.current_session = session_id
-        print(f"{Fore.GREEN}[*] Interacting with session {session_id}")
+        session_info = self.sessions.get_session(session_id)
+        
+        # Show modern session box
+        print(ModernStyle.session_box(session_id, session_info))
         
         # Load session-specific commands
         self.load_session_commands()
@@ -423,47 +475,47 @@ class AetherServer:
         return handler
 
     def cmd_back(self, args):
-        """Exit session interaction mode."""
+        """Exit session interaction mode - MODERNIZED."""
         if self.current_session:
-            print(f"{Fore.YELLOW}[*] Exiting session {self.current_session}")
+            print(ModernStyle.success("Session Closed", f"Exited from {self.current_session} and returned to main menu"))
             self.current_session = None
             self.session_commands = {}
 
     def cmd_exit(self, args):
-        """Exit the C2 server."""
-        print(f"{Fore.YELLOW}[*] Shutting down...")
+        """Exit the C2 server - MODERNIZED."""
+        print(ModernStyle.warning("Shutdown", "AETHER Server shutting down..."))
         self.running = False
-        # Send self-destruct to all sessions?
         sys.exit(0)
 
     def cmd_broadcast(self, args):
-        """Broadcast command to all sessions. Usage: broadcast <command>"""
+        """Broadcast command to all sessions. Usage: broadcast <command> - MODERNIZED"""
         if not args:
-            print(f"{Fore.RED}[-] Usage: broadcast <command>")
+            print(ModernStyle.error("Invalid Usage", "Usage: broadcast <command>"))
             return
         
         cmd = ' '.join(args)
-        for session_id in self.sessions.list_all().keys():
+        sessions = self.sessions.list_all()
+        for session_id in sessions.keys():
             self.sessions.queue_command(session_id, {'type': 'shell', 'data': cmd})
-        print(f"{Fore.GREEN}[+] Command broadcasted to all sessions")
+        print(ModernStyle.success("Broadcast Complete", f"Command sent to {len(sessions)} session(s)"))
 
     def cmd_generate(self, args):
-        """Generate a new agent payload. Usage: generate <output_file> [config]"""
-        print(f"{Fore.CYAN}[*] Generating agent payload...")
+        """Generate a new agent payload. Usage: generate <output_file> [config] - MODERNIZED"""
+        print(ModernStyle.info("Generator", "Generating new agent payload..."))
         # This would call the builder module
-        print(f"{Fore.GREEN}[+] Payload generated: agent.exe")
+        print(ModernStyle.success("Payload Generated", "Agent saved as: agent.exe"))
 
     def cmd_kill(self, args):
-        """Kill a session. Usage: kill <session_id>"""
+        """Kill a session. Usage: kill <session_id> - MODERNIZED"""
         if not args:
-            print(f"{Fore.RED}[-] Usage: kill <session_id>")
+            print(ModernStyle.error("Invalid Usage", "Usage: kill <session_id>"))
             return
         
         session_id = args[0]
         if self.sessions.kill(session_id):
-            print(f"{Fore.GREEN}[+] Session {session_id} terminated")
+            print(ModernStyle.success("Session Killed", f"Terminated {session_id}"))
         else:
-            print(f"{Fore.RED}[-] Failed to kill session {session_id}")
+            print(ModernStyle.error("Kill Failed", f"Could not terminate {session_id}"))
 
     # ========== SESSION COMMANDS ==========
     def send_session_command(self, cmd_type, cmd_data):

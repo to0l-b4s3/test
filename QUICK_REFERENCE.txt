@@ -1,0 +1,195 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║         AETHER C2 - MODERN STYLING QUICK REFERENCE CARD                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ TERMINAL COMMANDS - NEW & MODERNIZED                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  🔥 help                    - Show all commands or get detailed help
+  🔥 help <command>          - Get detailed help for specific command
+  🔥 sessions                - List all active agent sessions (modern table)
+  🔥 interact <id>           - Connect to agent (shows session box)
+  🔥 broadcast <cmd>         - Send command to all agents
+  🔥 generate                - Generate new agent payload
+  🔥 kill <id>               - Terminate agent session
+  🔥 exit                    - Shutdown AETHER server
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ COMMAND CATEGORIES - 32 DOCUMENTED COMMANDS                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  System Information:       whoami, hostname, sysinfo
+  File Operations:          ls, cat, mkdir, rm, mv, cd, pwd, find
+  Intelligence:             screenshot, webcam, audio, keylog, clipboard, browser, wifi
+  Process Management:       ps, kill, inject
+  File Transfer:            download, upload
+  Privilege & Persistence:  getsystem, persist
+  Network:                  netstat, scan, portscan, smb
+  Evasion:                  defender
+  Utility:                  help, history
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ STYLED MESSAGE TYPES                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ✅ SUCCESS:        ModernStyle.success(title, message, details={})
+     Output: Green checkmark with title, message, and optional details
+
+  ❌ ERROR:          ModernStyle.error(title, message)
+     Output: Red X with title and red message
+
+  ⚠️  WARNING:       ModernStyle.warning(title, message)
+     Output: Orange warning triangle with yellow text
+
+  ℹ️  INFO:          ModernStyle.info(title, message)
+     Output: Blue info circle with message
+
+  📊 TABLE:          ModernStyle.table(headers, rows)
+     Output: ASCII table with colors and alignment
+
+  📦 SESSION BOX:    ModernStyle.session_box(id, hostname, user)
+     Output: Formatted box with session information
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ AVAILABLE EMOJI SYMBOLS                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ✅ SUCCESS    🔴 FIRE      📄 FILE        ⏱️  TIMER
+  ❌ ERROR      🚀 ROCKET    💻 COMMAND     🕐 CLOCK
+  ⚠️  WARNING    🔒 LOCK      🌐 NETWORK     ▶️  TERMINAL
+  ℹ️  INFO       ⚙️ GEAR      📊 CHART       👀 EYES
+  ➜  ARROW      ⬇️ DOWNLOAD   📁 FOLDER      ⭐ STAR
+  ● BULLET      ⬆️ UPLOAD
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ WHATSAPP MESSAGE FORMATTING                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Text Formatting:
+    *bold*           → WhatsApp bold
+    _italic_         → WhatsApp italic
+    ```code```       → WhatsApp code block
+
+  Message Templates:
+    WhatsAppFormatter.success(title, message)
+    WhatsAppFormatter.error(title, message)
+    WhatsAppFormatter.warning(title, message)
+    WhatsAppFormatter.info(title, message)
+
+  Complex Messages:
+    WhatsAppFormatter.list_items(title, items)
+    WhatsAppFormatter.command_help(cmd, help_info)
+    WhatsAppFormatter.sessions_list(sessions)
+    WhatsAppFormatter.table(headers, rows)
+
+  Character Limit: 4096 (auto-truncate with "...")
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PYTHON CODE EXAMPLES                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  # Terminal - Success Message
+  from modern_style import ModernStyle
+  print(ModernStyle.success("Command Executed", "Screenshot captured", 
+                           {"File": "ss_123.png", "Size": "2.4 MB"}))
+
+  # Terminal - Help Table
+  from command_help import get_commands_by_category
+  categories = get_commands_by_category()
+  for cat, commands in categories.items():
+      print(f"{cat}: {', '.join(commands)}")
+
+  # Terminal - Modern Table
+  headers = ['Command', 'Status']
+  rows = [['screenshot', '✅ Ready'], ['keylog', '✅ Ready']]
+  print(ModernStyle.table(headers, rows))
+
+  # WhatsApp - Formatted Message
+  from whatsapp_formatter import WhatsAppFormatter
+  msg = WhatsAppFormatter.success("Download", "All files downloaded")
+  send_to_whatsapp(msg)
+
+  # WhatsApp - Help Info
+  from command_help import get_command_help
+  help_info = get_command_help('screenshot')
+  msg = WhatsAppFormatter.command_help('screenshot', help_info)
+  send_to_whatsapp(msg)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ INSTALLATION & USAGE                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  1. Import modules:
+     from modern_style import ModernStyle, TerminalPrinter
+     from command_help import get_command_help, COMMAND_HELP
+     from whatsapp_formatter import WhatsAppFormatter
+
+  2. Display banner:
+     print(ModernStyle.banner())
+
+  3. Format messages:
+     print(ModernStyle.success("Title", "Message"))
+     print(ModernStyle.error("Error", "Details"))
+
+  4. Get command help:
+     help_info = get_command_help('screenshot')
+     print(help_info['description'])
+     print(help_info['usage'])
+
+  5. Send to WhatsApp:
+     msg = WhatsAppFormatter.success("Title", "Message")
+     client.send_message(chat, msg)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ TESTING                                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Run comprehensive tests:
+    python test_modern_integration.py
+
+  Tests included:
+    ✅ Banner display
+    ✅ Help system (all 32 commands)
+    ✅ Terminal message styles
+    ✅ Session information box
+    ✅ WhatsApp formatting
+    ✅ Table formatting
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FILE LOCATIONS                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  /workspaces/test/server/modern_style.py        (250+ lines)
+  /workspaces/test/server/command_help.py        (400+ lines)
+  /workspaces/test/server/whatsapp_formatter.py  (350+ lines)
+  /workspaces/test/server/aether_server.py       (UPDATED)
+  /workspaces/test/test_modern_integration.py    (Integration tests)
+  /workspaces/test/MODERN_STYLING_GUIDE.py       (Full documentation)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ QUICK TIPS                                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  💡 Type "help" in terminal for all commands
+  💡 Type "help <command>" for detailed command documentation
+  💡 Use "sessions" to see all connected agents
+  💡 Use "interact <id>" to control an agent
+  💡 All help documentation is built-in (no external files needed)
+  💡 WhatsApp messages auto-truncate at 4096 characters
+  💡 Terminal output works with all modern terminals
+  💡 Emoji support requires modern terminal emulator
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     STATUS: ✅ FULLY DEPLOYED & TESTED                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
