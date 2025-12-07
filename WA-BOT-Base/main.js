@@ -291,6 +291,3 @@ const sendTestWAM = async (sock, enabled = false) => {
     log.error("Failed to send WAM:", error.message);
   }
 };
-
-// Export for index.js
-export { startSocket };
