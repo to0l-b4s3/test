@@ -10,7 +10,7 @@ const cooldowns = new Map();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function loadPlugin(file) {
-  const filePath = path.join(process.cwd(), "./commands/plugins", file);
+  const filePath = path.join(__dirname, "./commands/plugins", file);
   try {
     const url = pathToFileURL(filePath).href + `?update=${Date.now()}`;
     const mod = await import(url);
@@ -40,7 +40,7 @@ async function loadPlugin(file) {
 }
 
 export async function loadPlugins() {
-  const dir = path.join(process.cwd(), "./commands/plugins");
+  const dir = path.join(__dirname, "./commands/plugins");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 
   const files = fs.readdirSync(dir).filter((f) => f.endsWith(".js"));
