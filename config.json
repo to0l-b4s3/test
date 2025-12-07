@@ -92,6 +92,26 @@
   },
   "c2": {
     "primary_host": "localhost",
-    "primary_port": 443
+    "primary_port": 443,
+    "host": "0.0.0.0",
+    "port": 443,
+    "encryption_key": "",
+    "beacon_interval": 30
+  },
+  "agent": {
+    "process_name": "svchost.exe",
+    "persistence": true,
+    "evasion": true
+  },
+  "builder": {
+    "obfuscation": true,
+    "icon_path": ""
+  },
+  "stager": {
+    "type": "exe"
+  },
+  "whatsapp": {
+    "enabled": false,
+    "api_key": ""
   }
 }
