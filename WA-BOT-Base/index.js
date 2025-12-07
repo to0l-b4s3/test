@@ -31,12 +31,17 @@ if (cluster.isMaster) {
   // Worker process
   logger.success(`Worker ${process.pid} started`);
   
-  try {
-    // Start the main socket/bot
-    startSocket();
-  } catch (error) {
-    logger.error(`Failed to start main.js: ${error.message}`);
-    console.error(error);
-    process.exit(1);
-  }
+  (async () => {
+    try {
+      // Start the main socket/bot (startSocket is async)
+      await startSocket();
+    } catch (error) {
+      logger.error(`Failed to start socket in worker: ${error.message || JSON.stringify(error)}`);
+      if (error instanceof Error) {
+        logger.debug('Error stack:', error.stack);
+      }
+      console.error(error);
+      process.exit(1);
+    }
+  })();
 }

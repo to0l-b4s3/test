@@ -229,7 +229,21 @@ export const startSocket = async () => {
     return sock;
 
   } catch (error) {
-    log.error("Failed to start socket:", error.message);
+    log.error("Failed to start socket:", error.message || JSON.stringify(error));
+    
+    // Log full stack trace for debugging
+    if (error instanceof Error) {
+      log.debug("Error stack:", error.stack);
+    }
+    
+    // Check if this is an import/module error
+    if (error.message?.includes("Cannot find module") || 
+        error.message?.includes("ERR_MODULE_NOT_FOUND") ||
+        error.message?.includes("ERR_UNKNOWN_FILE_EXTENSION")) {
+      log.error("Module loading error detected. Checking dependencies...");
+      log.error("Please run: npm install");
+      process.exit(1);
+    }
     
     if (reconnectAttempts < maxReconnectAttempts) {
       const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts), 60000);

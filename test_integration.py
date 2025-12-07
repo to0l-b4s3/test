@@ -6,6 +6,11 @@ Verifies all components are functional
 import sys
 import os
 
+# Fix Unicode issues on Windows
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 # Setup paths
 sys.path.insert(0, os.getcwd())
 sys.path.insert(0, os.path.join(os.getcwd(), 'server'))
@@ -18,9 +23,9 @@ print("=" * 70)
 print("\n[1] Testing core imports...")
 try:
     import json, base64, hashlib, time, threading, subprocess
-    print("  ✓ Standard library imports")
+    print("  [OK] Standard library imports")
 except Exception as e:
-    print(f"  ✗ Standard library: {e}")
+    print(f"  [FAIL] Standard library: {e}")
     sys.exit(1)
 
 # Test 2: Server components
@@ -53,20 +58,20 @@ print("\n[4] Testing intelligence modules...")
 try:
     from agent.modules.intelligence.keylogger import Keylogger
     from agent.modules.intelligence.screenshot import ScreenshotCapturer
-    print("  ✓ Intelligence modules (basic)")
+    print("  [OK] Intelligence modules (basic)")
 except ImportError as e:
     if "PIL" in str(e) or "cv2" in str(e) or "win32" in str(e):
-        print(f"  ⚠ Intelligence modules (Windows/optional deps): {e}")
+        print(f"  [WARN] Intelligence modules (Windows/optional deps): {e}")
     else:
-        print(f"  ✗ Intelligence modules: {e}")
+        print(f"  [FAIL] Intelligence modules: {e}")
 
 # Test 5: Builder components
 print("\n[5] Testing builder components...")
 try:
     from builder.compile import AetherBuilder
-    print("  ✓ Builder components")
+    print("  [OK] Builder components")
 except Exception as e:
-    print(f"  ⚠ Builder: {e}")
+    print(f"  [WARN] Builder: {e}")
 
 # Test 6: Session management
 print("\n[6] Testing session management...")
@@ -76,15 +81,15 @@ try:
     if sessions.exists('test_session'):
         session = sessions.get('test_session')
         if session and session['hostname'] == 'TEST-PC':
-            print("  ✓ Session management works")
+            print("  [OK] Session management works")
         else:
-            print("  ✗ Session data corrupted")
+            print("  [FAIL] Session data corrupted")
             sys.exit(1)
     else:
-        print("  ✗ Session not added")
+        print("  [FAIL] Session not added")
         sys.exit(1)
 except Exception as e:
-    print(f"  ✗ Session management: {e}")
+    print(f"  [FAIL] Session management: {e}")
     sys.exit(1)
 
 # Test 7: Command suite
@@ -96,12 +101,12 @@ try:
     # Test a few commands
     result = cmd_suite.execute('test_session', 'help')
     if result and 'data' in result:
-        print("  ✓ Command execution works")
+        print("  [OK] Command execution works")
     else:
-        print("  ✗ Command execution failed")
+        print("  [FAIL] Command execution failed")
         sys.exit(1)
 except Exception as e:
-    print(f"  ✗ Command suite: {e}")
+    print(f"  [FAIL] Command suite: {e}")
     import traceback
     traceback.print_exc()
     sys.exit(1)
@@ -118,14 +123,14 @@ try:
     
     # decrypt_fernet returns parsed JSON if valid JSON, so compare as dicts
     if isinstance(decrypted, dict) and decrypted == data:
-        print("  ✓ Encryption/decryption works")
+        print("  [OK] Encryption/decryption works")
     elif decrypted == plaintext:
-        print("  ✓ Encryption/decryption works")
+        print("  [OK] Encryption/decryption works")
     else:
-        print(f"  ✗ Encryption/decryption mismatch: {decrypted} != {plaintext}")
+        print(f"  [FAIL] Encryption/decryption mismatch: {decrypted} != {plaintext}")
         sys.exit(1)
 except Exception as e:
-    print(f"  ✗ Cryptography: {e}")
+    print(f"  [FAIL] Cryptography: {e}")
     sys.exit(1)
 
 # Test 9: Configuration
@@ -139,17 +144,17 @@ try:
     missing = [k for k in required_keys if k not in config]
     
     if not missing and len(config) > 5:
-        print(f"  ✓ Configuration valid ({len(config)} keys)")
+        print(f"  [OK] Configuration valid ({len(config)} keys)")
     else:
-        print(f"  ✗ Configuration incomplete: {missing}")
+        print(f"  [FAIL] Configuration incomplete: {missing}")
         sys.exit(1)
 except Exception as e:
-    print(f"  ✗ Configuration: {e}")
+    print(f"  [FAIL] Configuration: {e}")
     sys.exit(1)
 
 # Summary
 print("\n" + "=" * 70)
-print("✓ INTEGRATION TEST PASSED")
+print("[OK] INTEGRATION TEST PASSED")
 print("=" * 70)
 print("\nAll core components are functional and ready for deployment.")
 print("\nNext steps:")
