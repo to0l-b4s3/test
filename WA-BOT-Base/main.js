@@ -20,6 +20,7 @@ import makeWASocket, {
 
 import { handleCommand, loadPlugins } from "./handler.js"
 import { createLogger } from "./src/utils/logger.js";
+import qrcode from "qrcode-terminal";
 const log = createLogger("Baileys");
 
 const msgRetryCounterCache = new NodeCache({
@@ -151,17 +152,37 @@ export const startSocket = async () => {
     });
 
     if (!sock.authState.creds.registered) {
-      let phoneNumber = await question("Please enter your phone number (with country code, e.g., +62812345678):\n");
+      log.info("\n========== Authentication Method ==========");
+      log.info("[1] Scan QR Code (Recommended - Phone Linked)");
+      log.info("[2] Pairing Code (Alternative - Web Linked)");
+      log.info("===========================================\n");
       
-      phoneNumber = phoneNumber.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+      const choice = await question("Select authentication method (1 or 2): ");
       
-      try {
-        const code = await sock.requestPairingCode(phoneNumber, "BASEBOTS");
-        log.success(`Pairing code: ${code}`);
-        log.info("Enter this code in your WhatsApp app: Settings > Linked Devices > Link a Device");
-      } catch (error) {
-        log.error("Failed to request pairing code:", error.message);
-        throw error;
+      if (choice.trim() === "2") {
+        // Pairing code method
+        let phoneNumber = await question("Enter your phone number (with country code, e.g., +27694176088):\n");
+        phoneNumber = phoneNumber.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+        
+        if (!phoneNumber.startsWith('+')) {
+          phoneNumber = '+' + phoneNumber;
+        }
+        
+        try {
+          log.info("Requesting pairing code...");
+          const code = await sock.requestPairingCode(phoneNumber);
+          log.success(`\n✅ Your Pairing Code: ${code}`);
+          log.info("Enter this code in your WhatsApp app:");
+          log.info("  Settings > Linked Devices > Link a Device > Link Phone as Companion");
+          log.info("\nWaiting for authentication...\n");
+        } catch (error) {
+          log.error("Failed to request pairing code:", error.message);
+          throw error;
+        }
+      } else {
+        // QR code method (default)
+        log.info("QR Code will appear below. Scan it with your WhatsApp app:");
+        log.info("  Settings > Linked Devices > Link a Device\n");
       }
     }
 
@@ -172,7 +193,13 @@ export const startSocket = async () => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
-        log.info("QR Code generated, scan with WhatsApp");
+        try {
+          qrcode.generate(qr, { small: true });
+          log.info("Scan the QR code above with your WhatsApp app");
+        } catch (error) {
+          log.warn("QR code generation failed:", error.message);
+          log.info("QR Code data:", qr);
+        }
       }
 
       if (connection === "close") {
